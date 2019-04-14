@@ -7,10 +7,11 @@ def test_sanity_predict():
     assert result == 0
 
 def test_sanity_cost():
-    classifier = LinearClassifier(num_classes=6, num_features=4)
+    classifier = LinearClassifier(num_classes=2, num_features=4)
     X = np.array([[1, 2, 4, 3, 5],
-                  [1, 4, 5, 5, 10]])
-    y = np.array([3, 4]).reshape(-1, 1)
+                  [1, 4, 5, 5, 10],
+                  [1, 1, 1, 1, 1]])
+    y = np.array([1, 0, 1]).reshape(-1, 1)
     classifier.cost(X, y)
 
 def test_sigmoid():

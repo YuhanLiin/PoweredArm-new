@@ -28,7 +28,7 @@ class LinearClassifier:
         y = np.equal(np.repeat(np.arange(self.num_classes).reshape(1, -1), m, 0),
                      np.repeat(y, self.num_classes, 1)).astype(int)
         # h -> m * c
-        h = X @ self.hypothesis.T
+        h = sigmoid(X @ self.hypothesis.T)
         print(y)
         print(h)
         # Logistic regression cost fn, produces 1 * c vector
