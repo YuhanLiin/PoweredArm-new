@@ -2,17 +2,22 @@ import numpy as np
 from classifier.classifier import LinearClassifier, sigmoid
 
 def test_sanity_predict():
-    classifier = LinearClassifier(num_classes=6, num_features=4)
+    hyp = np.array([[5, 1., 2., 3., 4.],
+                    [1000, 4., 3., 2., 1.]])
+    classifier = LinearClassifier(num_classes=2, num_features=4, init_hyp=hyp)
     result = classifier.predict(np.array([1., 2., 3., 4.]))
-    assert result == 0
+    assert result == 1
 
 def test_sanity_cost():
-    classifier = LinearClassifier(num_classes=2, num_features=4)
-    X = np.array([[1, 2, 4, 3, 5],
-                  [1, 4, 5, 5, 10],
-                  [1, 1, 1, 1, 1]])
+    hyp = np.array([[1, 1],
+                    [3, 5]])
+    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp)
+    X = np.array([[1, 3],
+                  [1, 0],
+                  [1, -4]])
     y = np.array([1, 0, 1]).reshape(-1, 1)
-    classifier.cost(X, y)
+    cost = classifier.cost(X, y)
+    assert (np.isclose(cost, np.array([1.45999966, 6.68286247]))).all()
 
 def test_sigmoid():
     sig1 = 1 / (1 + np.exp(-1))

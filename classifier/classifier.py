@@ -4,13 +4,18 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 class LinearClassifier:
-    def __init__(self, num_classes, num_features):
+    def __init__(self, num_classes, num_features, init_hyp=None):
+        assert num_classes >= 2
+
         # let c = num_classes
         self.num_classes = num_classes
         # let n = num_features
         self.num_features = num_features
         # c * n+1 matrix
         self.hypothesis = np.zeros((num_classes, num_features + 1))
+        if init_hyp is not None:
+            # Dependency injection for testing
+            self.hypothesis[:, :] = init_hyp
     
     def predict(self, features):
         features = np.array([1, *features]).reshape(-1, 1)
@@ -29,11 +34,9 @@ class LinearClassifier:
                      np.repeat(y, self.num_classes, 1)).astype(int)
         # h -> m * c
         h = sigmoid(X @ self.hypothesis.T)
-        print(y)
-        print(h)
         # Logistic regression cost fn, produces 1 * c vector
         cost = - np.sum(y * np.log(h) + (1 - y) * np.log(1 - h), 0) / m
-        print(cost)
+        return cost
 
     def train(self, X, y, Xval, yval, Xtest, ytest):
         pass
