@@ -32,3 +32,14 @@ def test_sigmoid():
             [.5, sig1],
             [sig2, .5]])
     ).all()
+
+def test_sanity_cost_delta():
+    hyp = np.array([[1, 1],
+                    [3, 5]])
+    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp)
+    X = np.array([[1, 3],
+                  [1, 0],
+                  [1, -4]])
+    y = np.array([1, 0, 1]).reshape(-1, 1)
+    delta = classifier.cost_delta(X, y)
+    print(delta)

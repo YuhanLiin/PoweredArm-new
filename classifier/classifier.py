@@ -16,8 +16,9 @@ class LinearClassifier:
         if init_hyp is not None:
             # Dependency injection for testing
             self.hypothesis[:, :] = init_hyp
-    
+
     def predict(self, features):
+        assert features.shape == (self.num_features,)
         features = np.array([1, *features]).reshape(-1, 1)
         result = self.hypothesis @ features
         return np.argmax(result)
@@ -34,9 +35,24 @@ class LinearClassifier:
                      np.repeat(y, self.num_classes, 1)).astype(int)
         # h -> m * c
         h = sigmoid(X @ self.hypothesis.T)
-        # Logistic regression cost fn, produces 1 * c vector
+        # Logistic regression cost fn, produces array of c
         cost = - np.sum(y * np.log(h) + (1 - y) * np.log(1 - h), 0) / m
         return cost
+
+    def cost_delta(self, X, y):
+        # X -> m * n+1
+        assert X.shape[1] == self.num_features + 1
+        # y -> m * 1
+        assert y.shape == (X.shape[0], 1)
+        m = y.shape[0]
+
+        # y -> m * c
+        y = np.equal(np.repeat(np.arange(self.num_classes).reshape(1, -1), m, 0),
+                     np.repeat(y, self.num_classes, 1)).astype(int)
+        # h -> m * c
+        h = sigmoid(X @ self.hypothesis.T)
+        # return -> n+1 * c
+        return X.T @ (h - y)
 
     def train(self, X, y, Xval, yval, Xtest, ytest):
         pass
