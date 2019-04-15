@@ -48,4 +48,10 @@ def test_sanity_cost_delta():
                  [2.75633788,  3.99999979]])
     )).all()
     
-
+def test_gradient_descent():
+    hyp = np.array([[1, 3],
+                    [0, 43],
+                    [8, 10]])
+    classifier = LinearClassifier(num_classes=3, num_features=1, init_hyp=hyp)
+    classifier.gradient_descent(lambda: hyp, 0.1, 5)
+    assert (np.isclose(classifier.hypothesis, 0.5 * hyp)).all()
