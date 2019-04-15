@@ -63,17 +63,28 @@ class LinearClassifier:
         # return -> n+1 * c
         return X.T @ (h - Y)
 
-    def gradient_descent(self, cost_delta, rate, num_iter):
+    def gradient_descent(self, cost_delta, cost_fn, rate, num_iter):
         """
         Run gradient descent on the hypothesis matrix.
 
         :param cost_delta: Function taking no input and returning matrix matching
         dimensions of hypothesis matrix.
+        :param cost_fn: Function taking no input and returning 1 * c matrix
         :param rate: Learning rate. Should be a number.
-        :param num_iter: Number of iterations to use
+        :param num_iter: Number of iterations to use.
+        :returns: List of cost function results from each iteration.
         """
+        costs = []
         for i in range(num_iter):
             self.hypothesis -= rate * cost_delta()
+            costs.append(cost_fn())
+        # return num_iter * c matrix of costs for each class
+        return np.array(costs)
 
     def train(self, X, y, Xval, yval, Xtest, ytest):
-        pass
+        rate = 0.01
+        num_iter = 100
+        costs = self.gradient_descent(lambda: self.cost_delta(X, y).T,
+                                      lambda: self.cost(X, y),
+                                      rate, num_iter)
+        print(costs)
