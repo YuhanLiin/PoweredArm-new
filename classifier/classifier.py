@@ -23,36 +23,45 @@ class LinearClassifier:
         result = self.hypothesis @ features
         return np.argmax(result)
 
-    def cost(self, X, y):
+    def _transform_y(self, y, m):
+        """
+        Convert a m * 1 vector y of ints representing class numbers to a
+        m * c matrix Y of 0s and 1s, with Y(i, j) representing whether
+        y(i) == class j
+        """
+        return np.equal(np.repeat(np.arange(self.num_classes).reshape(1, -1), m, 0),
+                        np.repeat(y, self.num_classes, 1)).astype(int)
+
+    def _check_data_shape(self, X, y):
+        """
+        Sanity check shape of input data. Assume column of ones has
+        already been added to X.
+        """
         # X -> m * n+1
         assert X.shape[1] == self.num_features + 1
         # y -> m * 1
         assert y.shape == (X.shape[0], 1)
-        m = y.shape[0]
 
-        # y -> m * c
-        y = np.equal(np.repeat(np.arange(self.num_classes).reshape(1, -1), m, 0),
-                     np.repeat(y, self.num_classes, 1)).astype(int)
+    def cost(self, X, y):
+        self._check_data_shape(X, y)
+        m = y.shape[0]
+        # Y -> m * c
+        Y = self._transform_y(y, m)
         # h -> m * c
         h = sigmoid(X @ self.hypothesis.T)
         # Logistic regression cost fn, produces array of c
-        cost = - np.sum(y * np.log(h) + (1 - y) * np.log(1 - h), 0) / m
+        cost = - np.sum(Y * np.log(h) + (1 - Y) * np.log(1 - h), 0) / m
         return cost
 
     def cost_delta(self, X, y):
-        # X -> m * n+1
-        assert X.shape[1] == self.num_features + 1
-        # y -> m * 1
-        assert y.shape == (X.shape[0], 1)
+        self._check_data_shape(X, y)
         m = y.shape[0]
-
         # y -> m * c
-        y = np.equal(np.repeat(np.arange(self.num_classes).reshape(1, -1), m, 0),
-                     np.repeat(y, self.num_classes, 1)).astype(int)
+        Y = self._transform_y(y, m)
         # h -> m * c
         h = sigmoid(X @ self.hypothesis.T)
         # return -> n+1 * c
-        return X.T @ (h - y)
+        return X.T @ (h - Y)
 
     def train(self, X, y, Xval, yval, Xtest, ytest):
         pass
