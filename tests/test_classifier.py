@@ -72,13 +72,28 @@ def test_sanity_training():
                   [90, 111]])
     y = np.array([0, 1, 2, 3])[:, None]
 
+    classifier = LinearClassifier(
+            num_classes=4, num_features=2, scaling_params=np.repeat(100, 2))
+    costs = classifier.train(X, y)
+    assert (costs[-1, :] < costs[0, :]).all()
+
+    # This first batch should be 100% accurate
     Xtest = np.array([[0 ,0],
                       [200, 230],
                       [6, 88],
                       [150, 19]])
     ytest = np.array([0, 3, 2, 1])[:, None]
 
-    classifier = LinearClassifier(
-            num_classes=4, num_features=2, scaling_params=np.repeat(100, 2))
-    costs = classifier.train(X, y)
-    assert (costs[-1, :] < costs[0, :]).all()
+    acc, recalls = classifier.evaluate(Xtest, ytest)
+    assert np.isclose(acc, 1)
+    assert np.allclose(recalls, np.ones(4))
+
+    # 3rd prediction should be wrong
+    Xbad = np.array([[0 ,0],
+                     [1, 4],
+                     [6, 8],
+                     [150, 19]])
+    ybad = np.array([0, 0, 1, 1])[:, None]
+    acc, recalls = classifier.evaluate(Xbad, ybad)
+    assert np.isclose(acc, 0.75)
+    assert np.allclose(recalls, [1, .5, -1, -1])

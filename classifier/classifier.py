@@ -28,7 +28,7 @@ class LinearClassifier:
         m * c matrix Y of 0s and 1s, with Y(i, j) representing whether
         y(i) == class j
         """
-        return np.equal(np.arange(self.num_classes)[None, :], y).astype(int)
+        return (np.arange(self.num_classes)[None, :] == y).astype(int)
 
     def _check_data_shape(self, X, y):
         """
@@ -93,7 +93,37 @@ class LinearClassifier:
         return costs
 
     def predict(self, X):
+        # X -> m * n
         assert X.shape[1] == self.num_features
+        # Add column to X, so X -> m * n+1
         X = np.c_[ np.ones(X.shape[0]), self.scale_features(X) ]
+        # result -> m * c
         result = X @ self.hypothesis
-        return np.argmax(result)
+        # returns -> m array, where the ith sample is the predicted class for sample i
+        return np.argmax(result, 1)
+
+    def evaluate(self, X, y):
+        def count(unique, counts):
+            class_counts = np.zeros(self.num_classes)
+            for cls, cnt in zip(unique, counts):
+                class_counts[cls] = cnt
+            return class_counts
+
+        results = self.predict(X).flatten()
+        y = y.flatten()
+        # bool array indicating whether each prediction was accurate
+        correct = results == y
+        # array of length c that tallies the # of samples from each class
+        class_counts = count(*np.unique(y, return_counts=True))
+        # array of that tallies the # of samples from each class predicted correctly
+        correct_counts = count(*np.unique(np.extract(correct, y), return_counts=True))
+
+        # recall values for each class (samples predicted correctly / total sample set)
+        # if class doesn't exist in data set, return -1
+        recall_arr = np.divide(
+            correct_counts, class_counts,
+            out=np.full_like(class_counts, -1), where=class_counts!=0)
+        # number representing overall accuracy of all samples
+        accuracy = np.sum(correct) / len(y)
+        return (accuracy, recall_arr)
+        return accuracy, recalls
