@@ -11,8 +11,8 @@ class LinearClassifier:
         self.num_classes = num_classes
         # let n = num_features
         self.num_features = num_features
-        # c * n+1 matrix
-        self.hypothesis = np.zeros((num_classes, num_features + 1))
+        # n+1 * c matrix
+        self.hypothesis = np.zeros((num_features + 1, num_classes))
         # c length vector, defaults to all 1s (no feature scaling)
         self.scaling_params = np.ones(num_features)
 
@@ -21,12 +21,6 @@ class LinearClassifier:
             self.hypothesis[:, :] = init_hyp
         if scaling_params is not None:
             self.scaling_params[:] = scaling_params
-
-    def predict(self, features):
-        assert features.shape == (self.num_features,)
-        features = np.array([1, *features])[:, None]
-        result = self.hypothesis @ features
-        return np.argmax(result)
 
     def _transform_y(self, y, m):
         """
@@ -52,7 +46,7 @@ class LinearClassifier:
         # Y -> m * c
         Y = self._transform_y(y, m)
         # h -> m * c
-        h = sigmoid(X @ self.hypothesis.T)
+        h = sigmoid(X @ self.hypothesis)
         # Logistic regression cost fn, produces array of c
         cost = - np.sum(Y * np.log(h) + (1 - Y) * np.log(1 - h), 0) / m
         return cost
@@ -63,7 +57,7 @@ class LinearClassifier:
         # Y -> m * c
         Y = self._transform_y(y, m)
         # h -> m * c
-        h = sigmoid(X @ self.hypothesis.T)
+        h = sigmoid(X @ self.hypothesis)
         # return -> n+1 * c
         return X.T @ (h - Y)
 
@@ -89,12 +83,17 @@ class LinearClassifier:
         return X / self.scaling_params[None, :]
 
     def train(self, X, y):
-        m = y.shape[0]
-        X = np.c_[ np.ones(m), self.scale_features(X) ]
+        X = np.c_[ np.ones(X.shape[0]), self.scale_features(X) ]
 
         rate = 0.1
         num_iter = 100
-        costs = self.gradient_descent(lambda: self.cost_delta(X, y).T,
+        costs = self.gradient_descent(lambda: self.cost_delta(X, y),
                                       lambda: self.cost(X, y),
                                       rate, num_iter)
         return costs
+
+    def predict(self, X):
+        assert X.shape[1] == self.num_features
+        X = np.c_[ np.ones(X.shape[0]), self.scale_features(X) ]
+        result = X @ self.hypothesis
+        return np.argmax(result)

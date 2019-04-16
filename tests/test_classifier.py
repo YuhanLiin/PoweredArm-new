@@ -21,14 +21,14 @@ def test_sigmoid():
 def test_sanity_predict():
     hyp = np.array([[5, 1., 2., 3., 4.],
                     [1000, 4., 3., 2., 1.]])
-    classifier = LinearClassifier(num_classes=2, num_features=4, init_hyp=hyp)
-    result = classifier.predict(np.array([1., 2., 3., 4.]))
+    classifier = LinearClassifier(num_classes=2, num_features=4, init_hyp=hyp.T)
+    result = classifier.predict(np.array([[1., 2., 3., 4.]]))
     assert result == 1
 
 def test_sanity_cost():
     hyp = np.array([[1, 1],
                     [3, 5]])
-    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp)
+    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp.T)
     X = np.array([[1, 3],
                   [1, 0],
                   [1, -4]])
@@ -39,7 +39,7 @@ def test_sanity_cost():
 def test_sanity_cost_delta():
     hyp = np.array([[1, 1],
                     [3, 5]])
-    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp)
+    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp.T)
     X = np.array([[1, 3],
                   [1, 0],
                   [1, -4]])
@@ -57,7 +57,7 @@ def test_gradient_descent():
 
     hyp = np.array([[1, 3],
                     [0, 43],
-                    [8, 10]])
+                    [8, 10]]).T
     classifier = LinearClassifier(num_classes=3, num_features=1, init_hyp=hyp)
     costs = classifier.gradient_descent(lambda: hyp,
                                         lambda: compress(classifier.hypothesis),
