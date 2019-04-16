@@ -1,22 +1,18 @@
 import numpy as np
 from classifier.classifier import LinearClassifier, sigmoid
 
-def assert_arr_eq(arr1, arr2):
-    assert (np.isclose(arr1, arr2)).all()
-
 def test_sigmoid():
     sig1 = 1 / (1 + np.exp(-1))
     sig2 = 1 / (1 + np.exp(-2))
     assert sigmoid(0) == .5
     assert sigmoid(1) == sig1
-    assert (
+    assert np.allclose(
         sigmoid(np.array([
             [0, 1],
-            [2, 0]])) ==
+            [2, 0]])),
         np.array([
             [.5, sig1],
-            [sig2, .5]])
-    ).all()
+            [sig2, .5]]))
 
 def test_sanity_predict():
     hyp = np.array([[5, 1., 2., 3., 4.],
@@ -34,7 +30,7 @@ def test_sanity_cost():
                   [1, -4]])
     y = np.array([1, 0, 1])[:, None]
     cost = classifier.cost(X, y)
-    assert_arr_eq(cost, np.array([1.45999966, 6.68286247]))
+    np.allclose(cost, np.array([1.45999966, 6.68286247]))
 
 def test_sanity_cost_delta():
     hyp = np.array([[1, 1],
@@ -45,7 +41,7 @@ def test_sanity_cost_delta():
                   [1, -4]])
     y = np.array([1, 0, 1])[:, None]
     delta = classifier.cost_delta(X, y)
-    assert_arr_eq(
+    np.allclose(
         delta,
         np.array([[0.76049824, -0.04742585],
                  [2.75633788,  3.99999979]])
@@ -62,8 +58,8 @@ def test_gradient_descent():
     costs = classifier.gradient_descent(lambda: hyp,
                                         lambda: compress(classifier.hypothesis),
                                         0.1, 5)
-    assert_arr_eq(classifier.hypothesis, 0.5 * hyp)
-    assert_arr_eq(costs, np.array([compress(hyp * (1 - i*0.1)) for i in range(1, 6)]))
+    np.allclose(classifier.hypothesis, 0.5 * hyp)
+    np.allclose(costs, np.array([compress(hyp * (1 - i*0.1)) for i in range(1, 6)]))
 
 def test_sanity_training():
     X = np.array([[2, 4],
