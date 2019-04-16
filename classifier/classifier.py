@@ -4,7 +4,7 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 class LinearClassifier:
-    def __init__(self, num_classes, num_features, init_hyp=None):
+    def __init__(self, num_classes, num_features, scaling_params=None, init_hyp=None):
         assert num_classes >= 2
 
         # let c = num_classes
@@ -13,9 +13,14 @@ class LinearClassifier:
         self.num_features = num_features
         # c * n+1 matrix
         self.hypothesis = np.zeros((num_classes, num_features + 1))
+        # c length vector, defaults to all 1s (no feature scaling)
+        self.scaling_params = np.ones(num_features)
+
         if init_hyp is not None:
             # Dependency injection for testing
             self.hypothesis[:, :] = init_hyp
+        if scaling_params is not None:
+            self.scaling_params[:] = scaling_params
 
     def predict(self, features):
         assert features.shape == (self.num_features,)
@@ -56,7 +61,7 @@ class LinearClassifier:
     def cost_delta(self, X, y):
         self._check_data_shape(X, y)
         m = y.shape[0]
-        # y -> m * c
+        # Y -> m * c
         Y = self._transform_y(y, m)
         # h -> m * c
         h = sigmoid(X @ self.hypothesis.T)
@@ -81,10 +86,16 @@ class LinearClassifier:
         # return num_iter * c matrix of costs for each class
         return np.array(costs)
 
-    def train(self, X, y, Xval, yval, Xtest, ytest):
-        rate = 0.01
+    def scale_features(self, X):
+        return X / self.scaling_params[None, :]
+
+    def train(self, X, y):
+        m = y.shape[0]
+        X = np.c_[ np.ones(m), self.scale_features(X) ]
+
+        rate = 0.1
         num_iter = 100
         costs = self.gradient_descent(lambda: self.cost_delta(X, y).T,
                                       lambda: self.cost(X, y),
                                       rate, num_iter)
-        print(costs)
+        return costs

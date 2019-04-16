@@ -11,7 +11,7 @@ def test_sigmoid():
     assert sigmoid(1) == sig1
     assert (
         sigmoid(np.array([
-            [0, 1], 
+            [0, 1],
             [2, 0]])) ==
         np.array([
             [.5, sig1],
@@ -50,7 +50,7 @@ def test_sanity_cost_delta():
         np.array([[0.76049824, -0.04742585],
                  [2.75633788,  3.99999979]])
     )
-    
+
 def test_gradient_descent():
     def compress(arr):
         return arr.sum(1).T
@@ -64,3 +64,21 @@ def test_gradient_descent():
                                         0.1, 5)
     assert_arr_eq(classifier.hypothesis, 0.5 * hyp)
     assert_arr_eq(costs, np.array([compress(hyp * (1 - i*0.1)) for i in range(1, 6)]))
+
+def test_sanity_training():
+    X = np.array([[2, 4],
+                  [100, 5],
+                  [6, 88],
+                  [90, 111]])
+    y = np.array([0, 1, 2, 3]).reshape(-1, 1)
+
+    Xtest = np.array([[0 ,0],
+                      [200, 230],
+                      [6, 88],
+                      [150, 19]])
+    ytest = np.array([0, 3, 2, 1]).reshape(-1, 1)
+
+    classifier = LinearClassifier(
+            num_classes=4, num_features=2, scaling_params=np.repeat(100, 2))
+    costs = classifier.train(X, y)
+    assert (costs[-1, :] < costs[0, :]).all()
