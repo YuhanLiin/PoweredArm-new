@@ -32,7 +32,7 @@ def test_sanity_cost():
     X = np.array([[1, 3],
                   [1, 0],
                   [1, -4]])
-    y = np.array([1, 0, 1]).reshape(-1, 1)
+    y = np.array([1, 0, 1])[:, None]
     cost = classifier.cost(X, y)
     assert_arr_eq(cost, np.array([1.45999966, 6.68286247]))
 
@@ -43,7 +43,7 @@ def test_sanity_cost_delta():
     X = np.array([[1, 3],
                   [1, 0],
                   [1, -4]])
-    y = np.array([1, 0, 1]).reshape(-1, 1)
+    y = np.array([1, 0, 1])[:, None]
     delta = classifier.cost_delta(X, y)
     assert_arr_eq(
         delta,
@@ -70,13 +70,13 @@ def test_sanity_training():
                   [100, 5],
                   [6, 88],
                   [90, 111]])
-    y = np.array([0, 1, 2, 3]).reshape(-1, 1)
+    y = np.array([0, 1, 2, 3])[:, None]
 
     Xtest = np.array([[0 ,0],
                       [200, 230],
                       [6, 88],
                       [150, 19]])
-    ytest = np.array([0, 3, 2, 1]).reshape(-1, 1)
+    ytest = np.array([0, 3, 2, 1])[:, None]
 
     classifier = LinearClassifier(
             num_classes=4, num_features=2, scaling_params=np.repeat(100, 2))

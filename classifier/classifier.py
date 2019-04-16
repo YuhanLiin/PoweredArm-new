@@ -24,7 +24,7 @@ class LinearClassifier:
 
     def predict(self, features):
         assert features.shape == (self.num_features,)
-        features = np.array([1, *features]).reshape(-1, 1)
+        features = np.array([1, *features])[:, None]
         result = self.hypothesis @ features
         return np.argmax(result)
 
@@ -34,8 +34,7 @@ class LinearClassifier:
         m * c matrix Y of 0s and 1s, with Y(i, j) representing whether
         y(i) == class j
         """
-        return np.equal(np.repeat(np.arange(self.num_classes).reshape(1, -1), m, 0),
-                        np.repeat(y, self.num_classes, 1)).astype(int)
+        return np.equal(np.arange(self.num_classes)[None, :], y).astype(int)
 
     def _check_data_shape(self, X, y):
         """
