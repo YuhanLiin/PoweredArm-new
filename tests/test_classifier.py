@@ -70,7 +70,7 @@ def test_sanity_training():
 
     classifier = LinearClassifier(
             num_classes=4, num_features=2, scaling_params=np.repeat(100, 2))
-    costs = classifier.train(X, y)
+    costs = classifier.train(X, y, rate=0.1, num_iter=100)
     assert (costs[-1, :] < costs[0, :]).all()
 
     # This first batch should be 100% accurate

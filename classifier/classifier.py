@@ -31,17 +31,13 @@ class LinearClassifier:
         return (np.arange(self.num_classes)[None, :] == y).astype(int)
 
     def _check_data_shape(self, X, y):
-        """
-        Sanity check shape of input data. Assume column of ones has
-        already been added to X.
-        """
+        # Sanity check input data. Assume no column of ones has been added
         # X -> m * n+1
-        assert X.shape[1] == self.num_features + 1
+        assert X.shape[1] == self.num_features
         # y -> m * 1
         assert y.shape == (X.shape[0], 1)
 
     def cost(self, X, y):
-        self._check_data_shape(X, y)
         m = y.shape[0]
         # Y -> m * c
         Y = self._transform_y(y, m)
@@ -52,7 +48,6 @@ class LinearClassifier:
         return cost
 
     def cost_delta(self, X, y):
-        self._check_data_shape(X, y)
         m = y.shape[0]
         # Y -> m * c
         Y = self._transform_y(y, m)
@@ -82,14 +77,15 @@ class LinearClassifier:
     def scale_features(self, X):
         return X / self.scaling_params[None, :]
 
-    def train(self, X, y):
+    def train(self, X, y, **optimization_args):
+        self._check_data_shape(X, y)
+        # Add column of ones
         X = np.c_[ np.ones(X.shape[0]), self.scale_features(X) ]
 
-        rate = 0.1
-        num_iter = 100
+        # Run optimization function and return the costs for debugging
         costs = self.gradient_descent(lambda: self.cost_delta(X, y),
                                       lambda: self.cost(X, y),
-                                      rate, num_iter)
+                                      **optimization_args)
         return costs
 
     def predict(self, X):
@@ -103,6 +99,8 @@ class LinearClassifier:
         return np.argmax(result, 1)
 
     def evaluate(self, X, y):
+        self._check_data_shape(X, y)
+
         def count(unique, counts):
             class_counts = np.zeros(self.num_classes)
             for cls, cnt in zip(unique, counts):
