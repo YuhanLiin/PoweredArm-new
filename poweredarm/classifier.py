@@ -12,7 +12,7 @@ class LinearClassifier:
         # let n = num_features
         self.num_features = num_features
         # n+1 * c matrix
-        self.hypothesis = np.zeros((num_features + 1, num_classes))
+        self.hypothesis = np.zeros((num_features + 1, num_classes), dtype=np.float32)
         # c length vector, defaults to all 1s (no feature scaling)
         self.scaling_params = np.ones(num_features)
 
@@ -28,14 +28,14 @@ class LinearClassifier:
         m * c matrix Y of 0s and 1s, with Y(i, j) representing whether
         y(i) == class j
         """
-        return (np.arange(self.num_classes)[None, :] == y).astype(int)
+        return (np.arange(self.num_classes)[None, :] == y[:, None]).astype(int)
 
     def _check_data_shape(self, X, y):
         # Sanity check input data. Assume no column of ones has been added
         # X -> m * n+1
         assert X.shape[1] == self.num_features
-        # y -> m * 1
-        assert y.shape == (X.shape[0], 1)
+        # y -> m vector
+        assert y.shape == (X.shape[0],)
 
     def cost(self, X, y):
         m = y.shape[0]
@@ -104,11 +104,10 @@ class LinearClassifier:
         def count(unique, counts):
             class_counts = np.zeros(self.num_classes)
             for cls, cnt in zip(unique, counts):
-                class_counts[cls] = cnt
+                class_counts[int(cls)] = cnt
             return class_counts
 
-        results = self.predict(X).flatten()
-        y = y.flatten()
+        results = self.predict(X)
         # bool array indicating whether each prediction was accurate
         correct = results == y
         # array of length c that tallies the # of samples from each class
