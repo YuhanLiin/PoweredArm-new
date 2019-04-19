@@ -34,6 +34,9 @@ class LinearClassifier:
         assert y.shape == (X.shape[0],)
 
     def cost(self, X, y):
+        """
+        Logistic regression cost fn = sum( y * log(h(X)) + (1-y) * log(1-h(X)) ) / m
+        """
         m = y.shape[0]
         # Y -> m * c
         Y = self._transform_y(y, m)
@@ -44,6 +47,9 @@ class LinearClassifier:
         return cost
 
     def cost_delta(self, X, y):
+        """
+        Derivative of logistic regression cost fn = (h(X) - y) * X
+        """
         m = y.shape[0]
         # Y -> m * c
         Y = self._transform_y(y, m)
@@ -71,11 +77,19 @@ class LinearClassifier:
         return np.array(costs)
 
     def scale_features(self, X):
+        """
+        With the right parameters this computes (X - mean(X)) / (max(X) - min(X))
+        for each feature. Applied to training data and prediction data.
+        """
         return (X-self.offset[None, :]) / self.divisor[None, :]
 
     def train(self, X, y, **optimization_args):
+        """
+        Train data via gradient descent. Calling this multiple times will not
+        improve accuracy after first time
+        """
         self._check_data_shape(X, y)
-        # Apply mean normalization feature scaling
+        # Compute mean normalization feature scaling parameters
         self.offset = np.mean(X, 0)
         self.divisor = np.max(X, 0) - np.min(X, 0)
 
@@ -99,6 +113,11 @@ class LinearClassifier:
         return np.argmax(result, 1)
 
     def evaluate(self, X, y):
+        """
+        Run predictions on a test dataset and compare them to the expected results.
+        Outputs overall accuracy (correct predictions / total samples) and the 
+        recall for each class (samples predicted correctly / total samples)
+        """
         self._check_data_shape(X, y)
 
         def count(unique, counts):
