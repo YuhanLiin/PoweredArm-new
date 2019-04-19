@@ -7,10 +7,10 @@ def train_linear_classifier(data_files):
     # 80-20 data split
     (X, y), (Xtest, ytest) = create_dataset(data, [0.8])
 
-    classifier = LinearClassifier(num_classes=4, num_features=8,
-                                  scaling_params=np.repeat(1600, 8))
+    classifier = LinearClassifier(num_classes=4, num_features=8, offset=np.mean(X, 0),
+                                  scaling_params=np.max(X, 0) - np.min(X, 0))
     
-    costs = classifier.train(X, y, rate=0.01, num_iter=500)
+    costs = classifier.train(X, y, rate=0.01, num_iter=1000)
     print(costs)
     acc, recalls = classifier.evaluate(Xtest, ytest)
     print(recalls)
