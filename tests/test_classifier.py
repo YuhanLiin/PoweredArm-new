@@ -70,7 +70,17 @@ def test_gradient_descent(num_features, num_classes):
         np.array([compress(weight * (1 - i*0.1)) for i in range(1, 6)])
     )
 
-def test_sanity_training():
+@pytest.mark.parametrize('Xtest, ytest, expected_acc, expected_recalls',
+    [
+        # This first batch should be 100% accurate
+        (np.array([[0, 0], [200, 230], [6, 88], [150, 19]]),
+         np.array([0, 3, 2, 1]), 1, np.ones(4)),
+        # 3rd prediction should be wrong
+        (np.array([[0, 0], [1, 4], [6, 8], [150, 19]]),
+         np.array([0, 0, 1, 1]), 0.75, [1, .5, -1, -1])
+    ]
+)
+def test_sanity_training(Xtest, ytest, expected_acc, expected_recalls):
     X = np.array([[2, 4],
                   [100, 5],
                   [6, 88],
@@ -81,26 +91,9 @@ def test_sanity_training():
     costs = classifier.train(X, y, rate=0.1, num_iter=100)
     assert (costs[-1, :] < costs[0, :]).all()
 
-    # This first batch should be 100% accurate
-    Xtest = np.array([[0 ,0],
-                      [200, 230],
-                      [6, 88],
-                      [150, 19]])
-    ytest = np.array([0, 3, 2, 1])
-
     acc, recalls = classifier.evaluate(Xtest, ytest)
-    assert np.isclose(acc, 1)
-    assert np.allclose(recalls, np.ones(4))
-
-    # 3rd prediction should be wrong
-    Xbad = np.array([[0 ,0],
-                     [1, 4],
-                     [6, 8],
-                     [150, 19]])
-    ybad = np.array([0, 0, 1, 1])
-    acc, recalls = classifier.evaluate(Xbad, ybad)
-    assert np.isclose(acc, 0.75)
-    assert np.allclose(recalls, [1, .5, -1, -1])
+    assert np.isclose(acc, expected_acc)
+    assert np.allclose(recalls, expected_recalls)
 
 @pytest.mark.parametrize('num_features', [1, 2, 3])
 @pytest.mark.parametrize('num_classes', [2, 3, 4])
