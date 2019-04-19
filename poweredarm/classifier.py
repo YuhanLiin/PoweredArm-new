@@ -113,13 +113,13 @@ class LinearClassifier:
         # array of length c that tallies the # of samples from each class
         class_counts = count(*np.unique(y, return_counts=True))
         # array of that tallies the # of samples from each class predicted correctly
-        correct_counts = count(*np.unique(np.extract(correct, y), return_counts=True))
+        correct_counts = count(*np.unique(y[correct], return_counts=True))
 
         # recall values for each class (samples predicted correctly / total sample set)
         # if class doesn't exist in data set, return -1
         recall_arr = np.divide(
             correct_counts, class_counts,
-            out=np.full_like(class_counts, -1), where=class_counts!=0)
+            out=np.full_like(class_counts, -1), where=class_counts != 0)
         # number representing overall accuracy of all samples
         accuracy = np.sum(correct) / len(y)
         return (accuracy, recall_arr)
