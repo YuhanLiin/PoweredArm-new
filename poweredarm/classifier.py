@@ -4,7 +4,7 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 class LinearClassifier:
-    def __init__(self, num_classes, num_features, offset, scaling_params=None, init_hyp=None):
+    def __init__(self, num_classes, num_features, init_hyp=None):
         assert num_classes >= 2
 
         # let c = num_classes
@@ -13,15 +13,10 @@ class LinearClassifier:
         self.num_features = num_features
         # n+1 * c matrix
         self.hypothesis = np.zeros((num_features + 1, num_classes), dtype=np.float32)
-        # c length vector, defaults to all 1s (no feature scaling)
-        self.scaling_params = np.ones(num_features)
-        self.offset = offset
 
         if init_hyp is not None:
             # Dependency injection for testing
             self.hypothesis[:, :] = init_hyp
-        if scaling_params is not None:
-            self.scaling_params[:] = scaling_params
 
     def _transform_y(self, y, m):
         """
@@ -76,14 +71,16 @@ class LinearClassifier:
         return np.array(costs)
 
     def scale_features(self, X):
-        return (X-self.offset[None, :]) / self.scaling_params[None, :]
+        return (X-self.offset[None, :]) / self.divisor[None, :]
 
     def train(self, X, y, **optimization_args):
         self._check_data_shape(X, y)
+        # Apply mean normalization feature scaling
+        self.offset = np.mean(X, 0)
+        self.divisor = np.max(X, 0) - np.min(X, 0)
+
         # Add column of ones
         X = np.c_[ np.ones(X.shape[0]), self.scale_features(X) ]
-        print(np.mean(X[:, 1:], 0))
-        print(np.std(X[:, 1:], 0))
 
         # Run optimization function and return the costs for debugging
         costs = self.gradient_descent(lambda: self.cost_delta(X, y),
@@ -126,4 +123,3 @@ class LinearClassifier:
         # number representing overall accuracy of all samples
         accuracy = np.sum(correct) / len(y)
         return (accuracy, recall_arr)
-        return accuracy, recalls

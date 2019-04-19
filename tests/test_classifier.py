@@ -14,13 +14,6 @@ def test_sigmoid():
             [.5, sig1],
             [sig2, .5]]))
 
-def test_sanity_predict():
-    hyp = np.array([[5, 1., 2., 3., 4.],
-                    [1000, 4., 3., 2., 1.]])
-    classifier = LinearClassifier(num_classes=2, num_features=4, init_hyp=hyp.T)
-    result = classifier.predict(np.array([[1., 2., 3., 4.]]))
-    assert result == 1
-
 def test_sanity_cost():
     hyp = np.array([[1, 1],
                     [3, 5]])
@@ -68,8 +61,7 @@ def test_sanity_training():
                   [90, 111]])
     y = np.array([0, 1, 2, 3])
 
-    classifier = LinearClassifier(
-            num_classes=4, num_features=2, scaling_params=np.repeat(100, 2))
+    classifier = LinearClassifier(num_classes=4, num_features=2)
     costs = classifier.train(X, y, rate=0.1, num_iter=100)
     assert (costs[-1, :] < costs[0, :]).all()
 
