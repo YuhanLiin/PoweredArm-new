@@ -12,11 +12,11 @@ class LinearClassifier:
         # let n = num_features
         self.num_features = num_features
         # n+1 * c matrix
-        self.hypothesis = np.zeros((num_features + 1, num_classes), dtype=np.float32)
+        self.weight = np.zeros((num_features + 1, num_classes), dtype=np.float32)
 
         if init_hyp is not None:
             # Dependency injection for testing
-            self.hypothesis[:, :] = init_hyp
+            self.weight[:, :] = init_hyp
 
     def _transform_y(self, y, m):
         """
@@ -38,7 +38,7 @@ class LinearClassifier:
         # Y -> m * c
         Y = self._transform_y(y, m)
         # h -> m * c
-        h = sigmoid(X @ self.hypothesis)
+        h = sigmoid(X @ self.weight)
         # Logistic regression cost fn, produces array of c
         cost = - np.sum(Y * np.log(h) + (1 - Y) * np.log(1 - h), 0) / m
         return cost
@@ -48,16 +48,16 @@ class LinearClassifier:
         # Y -> m * c
         Y = self._transform_y(y, m)
         # h -> m * c
-        h = sigmoid(X @ self.hypothesis)
+        h = sigmoid(X @ self.weight)
         # return -> n+1 * c
         return X.T @ (h - Y)
 
     def gradient_descent(self, cost_delta, cost_fn, rate, num_iter):
         """
-        Run gradient descent on the hypothesis matrix.
+        Run gradient descent on the weight matrix.
 
         :param cost_delta: Function taking no input and returning matrix matching
-        dimensions of hypothesis matrix.
+        dimensions of weight matrix.
         :param cost_fn: Function taking no input and returning 1 * c matrix
         :param rate: Learning rate. Should be a number.
         :param num_iter: Number of iterations to use.
@@ -65,7 +65,7 @@ class LinearClassifier:
         """
         costs = []
         for i in range(num_iter):
-            self.hypothesis -= rate * cost_delta()
+            self.weight -= rate * cost_delta()
             costs.append(cost_fn())
         # return num_iter * c matrix of costs for each class
         return np.array(costs)
@@ -94,7 +94,7 @@ class LinearClassifier:
         # Add column to X, so X -> m * n+1
         X = np.c_[ np.ones(X.shape[0]), self.scale_features(X) ]
         # result -> m * c
-        result = X @ self.hypothesis
+        result = X @ self.weight
         # returns -> m array, where the ith sample is the predicted class for sample i
         return np.argmax(result, 1)
 

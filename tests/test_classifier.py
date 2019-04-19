@@ -49,9 +49,9 @@ def test_gradient_descent():
                     [8, 10]]).T
     classifier = LinearClassifier(num_classes=3, num_features=1, init_hyp=hyp)
     costs = classifier.gradient_descent(lambda: hyp,
-                                        lambda: compress(classifier.hypothesis),
+                                        lambda: compress(classifier.weight),
                                         0.1, 5)
-    np.allclose(classifier.hypothesis, 0.5 * hyp)
+    np.allclose(classifier.weight, 0.5 * hyp)
     np.allclose(costs, np.array([compress(hyp * (1 - i*0.1)) for i in range(1, 6)]))
 
 def test_sanity_training():
