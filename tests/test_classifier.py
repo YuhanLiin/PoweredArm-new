@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from poweredarm.classifier import LinearClassifier, sigmoid
 
 def test_sigmoid():
@@ -85,3 +86,16 @@ def test_sanity_training():
     acc, recalls = classifier.evaluate(Xbad, ybad)
     assert np.isclose(acc, 0.75)
     assert np.allclose(recalls, [1, .5, -1, -1])
+
+@pytest.mark.parametrize('num_features', [1, 2, 3])
+@pytest.mark.parametrize('num_classes', [2, 3, 4])
+def test_save_load(num_features, num_classes):
+    classifier = LinearClassifier(num_classes=num_classes, num_features=num_features)
+    m = 10
+    X = np.random.rand(m, num_features)
+    y = np.random.randint(0, num_classes, m)
+    classifier.train(X, y, rate=0.01, num_iter=20)
+
+    filename = 'tests/data/classifier.npz'
+    classifier.save(filename)
+    assert LinearClassifier.load(filename) == classifier

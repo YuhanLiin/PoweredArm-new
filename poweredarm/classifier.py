@@ -123,3 +123,38 @@ class LinearClassifier:
         # number representing overall accuracy of all samples
         accuracy = np.sum(correct) / len(y)
         return (accuracy, recall_arr)
+
+    def save(self, filename):
+        """
+        Save all the fields of a trained classifier into a NPZ file
+        """
+        np.savez(
+            filename,
+            num_features=self.num_features,
+            num_classes=self.num_classes,
+            weight=self.weight,
+            offset=self.offset,
+            divisor=self.divisor
+        )
+
+    @classmethod
+    def load(cls, filename):
+        """
+        Load a trained classifier from a NPZ file created by save()
+        """
+        with np.load(filename, allow_pickle=False) as npz:
+            classifier = LinearClassifier(num_classes=npz['num_classes'],
+                                          num_features=npz['num_features'],
+                                          init_hyp=npz['weight'])
+            classifier.offset = npz['offset']
+            classifier.divisor = npz['divisor']
+            return classifier
+
+    def __eq__(self, other):
+        return (
+            self.num_classes == other.num_classes and
+            self.num_features == other.num_features and
+            np.isclose(self.weight, other.weight).all() and
+            np.isclose(self.offset, other.offset).all() and
+            np.isclose(self.divisor, other.divisor).all()
+        )

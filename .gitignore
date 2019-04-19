@@ -1,2 +1,5 @@
 **.swp
 **.pyc
+**.swo
+# Ignore saved test classifiers
+tests/data/*.npz
