@@ -154,7 +154,7 @@ class LinearClassifier:
         return (
             self.num_classes == other.num_classes and
             self.num_features == other.num_features and
-            np.isclose(self.weight, other.weight).all() and
-            np.isclose(self.offset, other.offset).all() and
-            np.isclose(self.divisor, other.divisor).all()
+            np.allclose(self.weight, other.weight) and
+            np.allclose(self.offset, other.offset) and
+            np.allclose(self.divisor, other.divisor)
         )

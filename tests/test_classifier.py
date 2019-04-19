@@ -16,44 +16,59 @@ def test_sigmoid():
             [sig2, .5]]))
 
 def test_sanity_cost():
+    # Check that cost function computes correctly
     hyp = np.array([[1, 1],
-                    [3, 5]])
-    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp.T)
+                    [3, 5]]).T
+    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp)
     X = np.array([[1, 3],
                   [1, 0],
                   [1, -4]])
     y = np.array([1, 0, 1])
     cost = classifier.cost(X, y)
-    np.allclose(cost, np.array([1.45999966, 6.68286247]))
+    assert np.allclose(cost, np.array([1.45999966, 6.68286247]))
 
 def test_sanity_cost_delta():
+    # Check that cost delta computes correctly
     hyp = np.array([[1, 1],
-                    [3, 5]])
-    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp.T)
+                    [3, 5]]).T
+    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp)
     X = np.array([[1, 3],
                   [1, 0],
                   [1, -4]])
     y = np.array([1, 0, 1])
     delta = classifier.cost_delta(X, y)
-    np.allclose(
+    assert np.allclose(
         delta,
         np.array([[0.76049824, -0.04742585],
                  [2.75633788,  3.99999979]])
     )
 
-def test_gradient_descent():
+@pytest.mark.parametrize('num_features', [1, 10, 32])
+@pytest.mark.parametrize('num_classes', [2, 31, 14])
+def test_gradient_descent(num_features, num_classes):
+    # Run gradient descent with arbitrary cost and cost delta functions
+    # for 5 iterations
     def compress(arr):
         return arr.sum(1).T
 
     hyp = np.array([[1, 3],
                     [0, 43],
                     [8, 10]]).T
-    classifier = LinearClassifier(num_classes=3, num_features=1, init_hyp=hyp)
+    hyp = np.random.rand(num_features + 1, num_classes)
+    classifier = LinearClassifier(
+        num_classes=num_classes,
+        num_features=num_features,
+        init_hyp=hyp)
     costs = classifier.gradient_descent(lambda: hyp,
                                         lambda: compress(classifier.weight),
                                         0.1, 5)
-    np.allclose(classifier.weight, 0.5 * hyp)
-    np.allclose(costs, np.array([compress(hyp * (1 - i*0.1)) for i in range(1, 6)]))
+    # Cost delta function just returns the classifier's weight matrix,
+    # so wieght should be halved after 5 iterations at rate of 0.1
+    assert np.allclose(classifier.weight, 0.5 * hyp)
+    assert np.allclose(
+        costs,
+        np.array([compress(hyp * (1 - i*0.1)) for i in range(1, 6)])
+    )
 
 def test_sanity_training():
     X = np.array([[2, 4],
@@ -98,4 +113,5 @@ def test_save_load(num_features, num_classes):
 
     filename = 'tests/data/classifier.npz'
     classifier.save(filename)
+    # Save and load classifier and see if it matches the original
     assert LinearClassifier.load(filename) == classifier
