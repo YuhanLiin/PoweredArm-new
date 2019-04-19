@@ -8,12 +8,7 @@ def train_linear_classifier(data_files):
     (X, y), (Xtest, ytest) = create_dataset(data, [0.8])
 
     classifier = LinearClassifier(num_classes=4, num_features=8)
-    
-    costs = classifier.train(X, y, rate=0.01, num_iter=1000)
-    print(costs)
-    acc, recalls = classifier.evaluate(Xtest, ytest)
-    print(recalls)
-    print(acc)
 
-import glob
-train_linear_classifier(glob.glob('tests/data/*.csv'))
+    costs = classifier.train(X, y, rate=0.02, num_iter=1000)
+    acc, recalls = classifier.evaluate(Xtest, ytest)
+    return acc, recalls
