@@ -4,7 +4,7 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 class LinearClassifier:
-    def __init__(self, num_classes, num_features, init_hyp=None):
+    def __init__(self, num_classes, num_features, init_weight=None):
         assert num_classes >= 2
 
         # let c = num_classes
@@ -14,9 +14,9 @@ class LinearClassifier:
         # n+1 * c matrix
         self.weight = np.zeros((num_features + 1, num_classes), dtype=np.float32)
 
-        if init_hyp is not None:
+        if init_weight is not None:
             # Dependency injection for testing
-            self.weight[:, :] = init_hyp
+            self.weight[:, :] = init_weight
 
     def _transform_y(self, y, m):
         """
@@ -145,7 +145,7 @@ class LinearClassifier:
         with np.load(filename, allow_pickle=False) as npz:
             classifier = LinearClassifier(num_classes=npz['num_classes'],
                                           num_features=npz['num_features'],
-                                          init_hyp=npz['weight'])
+                                          init_weight=npz['weight'])
             classifier.offset = npz['offset']
             classifier.divisor = npz['divisor']
             return classifier

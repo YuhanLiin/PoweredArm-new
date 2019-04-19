@@ -17,9 +17,9 @@ def test_sigmoid():
 
 def test_sanity_cost():
     # Check that cost function computes correctly
-    hyp = np.array([[1, 1],
+    weight = np.array([[1, 1],
                     [3, 5]]).T
-    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp)
+    classifier = LinearClassifier(num_classes=2, num_features=1, init_weight=weight)
     X = np.array([[1, 3],
                   [1, 0],
                   [1, -4]])
@@ -29,9 +29,9 @@ def test_sanity_cost():
 
 def test_sanity_cost_delta():
     # Check that cost delta computes correctly
-    hyp = np.array([[1, 1],
+    weight = np.array([[1, 1],
                     [3, 5]]).T
-    classifier = LinearClassifier(num_classes=2, num_features=1, init_hyp=hyp)
+    classifier = LinearClassifier(num_classes=2, num_features=1, init_weight=weight)
     X = np.array([[1, 3],
                   [1, 0],
                   [1, -4]])
@@ -51,23 +51,23 @@ def test_gradient_descent(num_features, num_classes):
     def compress(arr):
         return arr.sum(1).T
 
-    hyp = np.array([[1, 3],
+    weight = np.array([[1, 3],
                     [0, 43],
                     [8, 10]]).T
-    hyp = np.random.rand(num_features + 1, num_classes)
+    weight = np.random.rand(num_features + 1, num_classes)
     classifier = LinearClassifier(
         num_classes=num_classes,
         num_features=num_features,
-        init_hyp=hyp)
-    costs = classifier.gradient_descent(lambda: hyp,
+        init_weight=weight)
+    costs = classifier.gradient_descent(lambda: weight,
                                         lambda: compress(classifier.weight),
                                         0.1, 5)
     # Cost delta function just returns the classifier's weight matrix,
     # so wieght should be halved after 5 iterations at rate of 0.1
-    assert np.allclose(classifier.weight, 0.5 * hyp)
+    assert np.allclose(classifier.weight, 0.5 * weight)
     assert np.allclose(
         costs,
-        np.array([compress(hyp * (1 - i*0.1)) for i in range(1, 6)])
+        np.array([compress(weight * (1 - i*0.1)) for i in range(1, 6)])
     )
 
 def test_sanity_training():
