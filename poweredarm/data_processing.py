@@ -32,8 +32,10 @@ def create_dataset(data, proportions):
         pos = end
 
         X, y = chunk[:, :-1], chunk[:, -1]
-        yield X, y
+        yield X
+        yield y
 
     chunk = data[pos:, :]
     X, y = chunk[:, :-1], chunk[:, -1]
-    yield X, y
+    yield X
+    yield y
