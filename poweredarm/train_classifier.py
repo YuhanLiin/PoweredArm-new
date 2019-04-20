@@ -19,7 +19,7 @@ def train_linear_classifier(data_files, save=False, show_graphs=False):
 
     classifier = LinearClassifier(num_classes=4, num_features=8)
 
-    costs = classifier.train(X, y, rate=0.02, num_iter=1200)
+    costs = classifier.train(X, y, rate=0.02, num_iter=1500)
 
     if show_graphs:
         plt.ioff()
@@ -33,7 +33,7 @@ def train_linear_classifier(data_files, save=False, show_graphs=False):
 
     acc, recalls = classifier.evaluate(Xtest, ytest)
     if save:
-        cls_file = 'data/classifiers/lin-cls-{:%Y-%m-%d-%H:%m:%s}-{:.5g}'\
+        cls_file = 'data/classifiers/lin-cls-{:%Y-%m-%d-%H:%M:%S}-{:.5g}'\
             .format(datetime.today(), acc * 100)
         print('Save classifier to {}'.format(cls_file))
         classifier.save(cls_file)

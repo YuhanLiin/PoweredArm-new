@@ -1,7 +1,9 @@
 # Entry point script
+import os
 import sys
 import glob
 from functools import reduce
+from poweredarm.classifier import LinearClassifier
 from poweredarm.train_classifier import (train_linear_classifier,
                                          evaluate_linear_classifier)
 
@@ -36,6 +38,16 @@ if __name__ == '__main__':
         acc, recalls = evaluate_linear_classifier(classifer_file, data_files)
         print_results(acc, recalls)
 
+    elif command == 'header':
+        classifer_file = glob.glob(sys.argv[2])[0]
+        classifier = LinearClassifier.load(classifer_file)
+
+        header = 'out/classifier.h'
+        if not os.path.exists('out'):
+            os.mkdir('out')
+        classifier.to_header(header)
+        print('Generate header {} using classifier {}'.format(header, classifer_file))
+
     elif command == 'help':
         print('Usage: python -m poweredarm.main [command] [..args]')
         print('')
@@ -46,9 +58,15 @@ if __name__ == '__main__':
         print('')
 
         print('COMMAND evaluate')
-        print('Usage: train classifier_file [..data_files]')
+        print('Usage: evaluate classifier_file [..data_files]')
         print('Loads a classifier from an existing file and evaluates ' +
               'how accurately it predicts the supplied CSV dataset.')
+        print('')
+
+        print('COMMAND header')
+        print('Usage: header classifer_file')
+        print('Loads a classifier from an existing file and generates ' +
+              'a C header file from its parameters.')
         print('')
 
         print('COMMAND help')
