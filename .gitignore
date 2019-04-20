@@ -3,3 +3,5 @@
 **.swo
 # Ignore saved test classifiers
 tests/data/*.npz
+# Ignore test header files
+tests/data/*.h

@@ -95,16 +95,49 @@ def test_sanity_training(Xtest, ytest, expected_acc, expected_recalls):
     assert np.isclose(acc, expected_acc)
     assert np.allclose(recalls, expected_recalls)
 
-@pytest.mark.parametrize('num_features', [1, 2, 3])
-@pytest.mark.parametrize('num_classes', [2, 3, 4])
-def test_save_load(num_features, num_classes):
+# Helper for creating and training classifier with random data
+def make_classifier(num_features, num_classes):
     classifier = LinearClassifier(num_classes=num_classes, num_features=num_features)
     m = 10
     X = np.random.rand(m, num_features)
     y = np.random.randint(0, num_classes, m)
     classifier.train(X, y, rate=0.01, num_iter=20)
+    return classifier
 
+@pytest.mark.parametrize('num_features', [1, 2, 3])
+@pytest.mark.parametrize('num_classes', [2, 3, 4])
+def test_save_load(num_features, num_classes):
+    classifier = make_classifier(num_features, num_classes)
     filename = 'tests/data/classifier.npz'
     classifier.save(filename)
     # Save and load classifier and see if it matches the original
     assert LinearClassifier.load(filename) == classifier
+
+def test_header():
+    header = 'tests/data/classifier.h'
+    classifier = make_classifier(4, 5)
+    classifier.to_header(header)
+    
+    def parse_arr(string, shape):
+        return np.fromstring(string.replace('{', '').replace('}', ''),
+                             dtype=np.float32, sep=',').reshape(shape)
+
+    defines = {}
+    with open(header, 'r') as file:
+        for line in file:
+            if line.startswith('#define'):
+                _, name, val = line.split()
+                assert name not in defines
+                defines[name] = val
+
+        assert int(defines['CLASSIFIER_NUM_FEATURES']) == classifier.num_features
+        assert int(defines['CLASSIFIER_NUM_CLASSES']) == classifier.num_classes
+        assert np.allclose(
+            parse_arr(defines['CLASSIFIER_WEIGHT'], classifier.weight.shape), 
+            classifier.weight)
+        assert np.allclose(
+            parse_arr(defines['CLASSIFIER_OFFSET'], classifier.offset.shape),
+            classifier.offset)
+        assert np.allclose(
+            parse_arr(defines['CLASSIFIER_DIVISOR'], classifier.divisor.shape),
+            classifier.divisor)
