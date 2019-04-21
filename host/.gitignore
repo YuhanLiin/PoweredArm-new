@@ -1,6 +1,4 @@
-**.swp
 **.pyc
-**.swo
 out/*
 # Ignore saved test classifiers
 tests/data/*.npz
