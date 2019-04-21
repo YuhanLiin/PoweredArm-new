@@ -27,8 +27,6 @@ if __name__ == '__main__':
     elif command == 'evaluate':
         classifier_file = sys.argv[2]
         data_files = sys.argv[3:]
-        print(classifier_file)
-        print(data_files)
         if len(data_files) == 0:
             print("No data files detected for the 'evaluate' option")
             sys.exit(1)
@@ -37,14 +35,14 @@ if __name__ == '__main__':
         print_results(acc, recalls)
 
     elif command == 'header':
-        classifer_file = sys.argv[2]
-        classifier = LinearClassifier.load(classifer_file)
+        classifier_file = sys.argv[2]
+        classifier = LinearClassifier.load(classifier_file)
 
         header = 'out/classifier.h'
         if not os.path.exists('out'):
             os.mkdir('out')
-        classifier.to_header(header)
-        print('Generate header {} using classifier {}'.format(header, classifer_file))
+        classifier.to_header(classifier_file, header)
+        print('Generate header {} using classifier {}'.format(header, classifier_file))
 
     elif command == 'help':
         print('Usage: python -m poweredarm.main [command] [..args]')

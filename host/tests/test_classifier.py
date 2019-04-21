@@ -116,7 +116,7 @@ def test_save_load(num_features, num_classes):
 def test_header():
     header = 'tests/data/classifier.h'
     classifier = make_classifier(4, 5)
-    classifier.to_header(header)
+    classifier.to_header('placeholder', header)
     
     def parse_arr(string, shape):
         return np.fromstring(string.replace('{', '').replace('}', ''),
