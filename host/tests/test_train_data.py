@@ -9,4 +9,4 @@ from poweredarm.train_classifier import train_linear_classifier
 def test_train_classifier_on_data(execution_num):
     # Train classifier on actual data and expect high accuracy
     acc, recalls = train_linear_classifier(glob.glob('tests/data/*.csv'))
-    assert acc > 0.992 and (recalls > 0.98).all()
+    assert acc > 0.992 and (recalls > 0.975).all()
