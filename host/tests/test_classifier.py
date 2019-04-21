@@ -109,13 +109,13 @@ def make_classifier(num_features, num_classes):
 @pytest.mark.parametrize('num_classes', [2, 3, 4])
 def test_save_load(num_features, num_classes):
     classifier = make_classifier(num_features, num_classes)
-    filename = path.join('tests', 'data', 'classifier.npz')
+    filename = path.join('tests', 'data', 'classifiers', 'classifier.npz')
     classifier.save(filename)
     # Save and load classifier and see if it matches the original
     assert LinearClassifier.load(filename) == classifier
 
 def test_header():
-    header = path.join('tests', 'data', 'classifier.h')
+    header = path.join('tests', 'data', 'headers', 'classifier.h')
     classifier = make_classifier(4, 5)
     classifier.to_header('placeholder', header)
     

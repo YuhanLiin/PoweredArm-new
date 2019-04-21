@@ -9,6 +9,6 @@ from poweredarm.train_classifier import train_linear_classifier
 @pytest.mark.parametrize('execution_num', range(5))
 def test_train_classifier_on_data(execution_num):
     # Train classifier on actual data and expect high accuracy
-    files = path.join('tests', 'data', '*.csv')
+    files = path.join('tests', 'data', 'dataset', '*.csv')
     acc, recalls = train_linear_classifier(glob.glob(files))
     assert acc > 0.992 and (recalls > 0.975).all()
