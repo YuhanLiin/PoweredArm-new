@@ -1,14 +1,10 @@
 # Entry point script
 import os
 import sys
-import glob
 from functools import reduce
 from poweredarm.classifier import LinearClassifier
 from poweredarm.train_classifier import (train_linear_classifier,
                                          evaluate_linear_classifier)
-
-def glob_args(start):
-    return reduce(lambda a, b: a + b, [glob.glob(f) for f in sys.argv[start:]], [])
 
 def print_results(acc, recalls):
     print('Classifier predicted with accuracy of: {}'.format(acc * 100))
@@ -20,7 +16,7 @@ if __name__ == '__main__':
     command = sys.argv[1]
 
     if command == 'train':
-        data_files = glob_args(2)
+        data_files = sys.argv[2:]
         if len(data_files) == 0:
             print("No data files detected for the 'train' option")
             sys.exit(1)
@@ -29,17 +25,19 @@ if __name__ == '__main__':
         print_results(acc, recalls)
 
     elif command == 'evaluate':
-        classifer_file = glob.glob(sys.argv[2])[0]
-        data_files = glob_args(3)
+        classifier_file = sys.argv[2]
+        data_files = sys.argv[3:]
+        print(classifier_file)
+        print(data_files)
         if len(data_files) == 0:
             print("No data files detected for the 'evaluate' option")
             sys.exit(1)
 
-        acc, recalls = evaluate_linear_classifier(classifer_file, data_files)
+        acc, recalls = evaluate_linear_classifier(classifier_file, data_files)
         print_results(acc, recalls)
 
     elif command == 'header':
-        classifer_file = glob.glob(sys.argv[2])[0]
+        classifer_file = sys.argv[2]
         classifier = LinearClassifier.load(classifer_file)
 
         header = 'out/classifier.h'

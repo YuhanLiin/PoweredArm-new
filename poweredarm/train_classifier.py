@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 from poweredarm.classifier import LinearClassifier
 from poweredarm.data_processing import (aggregate_csv, create_dataset)
 
-def evaluate_linear_classifier(classifer_file, data_files):
-    classifier = LinearClassifier.load(classifer_file)
+def evaluate_linear_classifier(classifier_file, data_files):
+    classifier = LinearClassifier.load(classifier_file)
     data = aggregate_csv(data_files)
     X, y = create_dataset(data, [])
 
