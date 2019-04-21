@@ -1,3 +1,4 @@
+from os import path
 from datetime import datetime
 import numpy as np
 from matplotlib import pyplot as plt
@@ -33,8 +34,10 @@ def train_linear_classifier(data_files, save=False, show_graphs=False):
 
     acc, recalls = classifier.evaluate(Xtest, ytest)
     if save:
-        cls_file = 'data/classifiers/lin-cls-{:%Y-%m-%d-%H:%M:%S}-{:.5g}'\
-            .format(datetime.today(), acc * 100)
+        cls_file = path.join(
+            'data', 'classifiers',
+            'lin-cls-{:%Y-%m-%d-%H-%M-%S}-{:.5g}'.format(datetime.today(), acc * 100)
+        )
         print('Save classifier to {}'.format(cls_file))
         classifier.save(cls_file)
 

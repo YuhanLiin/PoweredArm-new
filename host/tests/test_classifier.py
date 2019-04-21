@@ -1,3 +1,4 @@
+from os import path
 import numpy as np
 import pytest
 from poweredarm.classifier import LinearClassifier, sigmoid
@@ -108,13 +109,13 @@ def make_classifier(num_features, num_classes):
 @pytest.mark.parametrize('num_classes', [2, 3, 4])
 def test_save_load(num_features, num_classes):
     classifier = make_classifier(num_features, num_classes)
-    filename = 'tests/data/classifier.npz'
+    filename = path.join('tests', 'data', 'classifier.npz')
     classifier.save(filename)
     # Save and load classifier and see if it matches the original
     assert LinearClassifier.load(filename) == classifier
 
 def test_header():
-    header = 'tests/data/classifier.h'
+    header = path.join('tests', 'data', 'classifier.h')
     classifier = make_classifier(4, 5)
     classifier.to_header('placeholder', header)
     

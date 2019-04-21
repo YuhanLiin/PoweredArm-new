@@ -38,7 +38,7 @@ if __name__ == '__main__':
         classifier_file = sys.argv[2]
         classifier = LinearClassifier.load(classifier_file)
 
-        header = 'out/classifier.h'
+        header = os.path.join('out', 'classifier.h')
         if not os.path.exists('out'):
             os.mkdir('out')
         classifier.to_header(classifier_file, header)
