@@ -10,7 +10,7 @@ Requires:
 Setup:
 - `cd host`
 - `pip install -r requirements.txt` to get dependencies.
-- `python -m run.py`, which will display the help text for the main script.
+- `python -m run`, which will display the help text for the main script.
 
 If you want to run the tests:
 - `pip install -r requirements_dev.txt`
