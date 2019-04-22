@@ -3,6 +3,8 @@
 #include "classifier.h"
 #include "predict.h"
 
+int STATUS = 0;
+
 void _close_enough(
     const float arr1[],
     const float arr2[],
@@ -18,6 +20,7 @@ void _close_enough(
         if (diff > tol || -diff < -tol) {
             printf("arr1[%zd]=%f not close enough to arr2[%zd]=%f on line %d!\n",
                    i, a, i, b, line);
+            STATUS = 1;
         }
     }
 }
@@ -66,5 +69,10 @@ int main() {
     printf("Tests start!\n");
     test_scaling();
     test_compute_best_class();
-    printf("Tests end!\n");
+
+    if (STATUS) {
+        printf("Tests failed!\n");
+    } else {
+        printf("Tests passed!\n");
+    }
 }
