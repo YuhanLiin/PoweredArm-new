@@ -27,17 +27,44 @@ void _close_enough(
 
 static void test_scaling()
 {
-    float features[CLASSIFIER_NUM_FEATURES] = {1, 10, 88, 3, 9, 5, 11, 1};
-    float offset[CLASSIFIER_NUM_FEATURES] = {3, 4, 22, 7, 0, 4, 5, 10};
-    float divisor[CLASSIFIER_NUM_FEATURES] = {2, 3, 10, 9, 1, 3, 7, 9};
+    float features[CLASSIFIER_NUM_FEATURES] = {1, 10, 88, 3};
+    float offset[CLASSIFIER_NUM_FEATURES] = {3, 4, 22, 7};
+    float divisor[CLASSIFIER_NUM_FEATURES] = {2, 3, 10, 9};
 
-    float expected[CLASSIFIER_NUM_FEATURES] = {-1, 2, 6.6, -4/9., 9., 1/3., 6/7., -1};
+    float expected[CLASSIFIER_NUM_FEATURES] = {-1, 2, 6.6, -4/9.};
     scale_features(features, offset, divisor);
     close_enough(expected, features, CLASSIFIER_NUM_FEATURES, 0.001);
+}
+
+static void test_compute_best_class()
+{
+    float weight[CLASSIFIER_NUM_FEATURES + 1][CLASSIFIER_NUM_CLASSES] = {
+        {400, 0},
+        {20, 4},
+        {2, 4},
+        {1, 5},
+        {4, 4}
+    };
+
+    float features1[] = {0, 0, -1, 0};
+    float features2[] = {-20, 17, 12, 1};
+    float features3[] = {0, 10, 10, 7000};
+    float features4[] = {1, 0, 105, 3};
+    float expected_results[] = {0, 1, 0, 1};
+
+    float results[] = {
+        compute_best_class(features1, weight),
+        compute_best_class(features2, weight),
+        compute_best_class(features3, weight),
+        compute_best_class(features4, weight),
+    };
+
+    close_enough(results, expected_results, sizeof(results)/sizeof(float), 0.00001);
 }
 
 int main() {
     printf("Tests start!\n");
     test_scaling();
+    test_compute_best_class();
     printf("Tests end!\n");
 }

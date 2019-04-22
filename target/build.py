@@ -17,11 +17,11 @@ if __name__ == '__main__':
     if target == 'test':
         src += glob.glob(os.path.join('tests', '*.c'))
         inc += ['tests']
-    else:
+    elif target == 'target':
         inc += [os.path.join('..', 'host', 'out')]
     inc = ['-I'+path for path in inc]
 
     cmd = ['gcc'] + flags + inc + src + ['-o', output]
-    print(cmd)
+    print(''.join(cmd))
     subprocess.check_call(cmd)
     subprocess.call([output])
