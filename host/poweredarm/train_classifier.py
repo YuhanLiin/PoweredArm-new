@@ -30,6 +30,7 @@ def train_linear_classifier(data_files, save=False, show_graphs=False):
         plt.title('Cost fn')
         plt.xlabel('# of iterations')
         plt.ylabel('Value of cost fn')
+        plt.legend(['Class {}'.format(n) for n in range(costs.shape[1])])
         plt.show()
 
     acc, recalls = classifier.evaluate(Xtest, ytest)

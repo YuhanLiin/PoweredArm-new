@@ -10,7 +10,7 @@ def print_results(acc, recalls):
     print('Classifier predicted with accuracy of: {}'.format(acc * 100))
     print('')
     for cls, recall in enumerate(recalls):
-        print('Class {} has recall of: {}'.format(cls, recall))
+        print('Class {} has recall of: {}'.format(cls, recall * 100))
 
 def print_help(retcode):
     print('Usage: python -m poweredarm.main [command] [..args]')
