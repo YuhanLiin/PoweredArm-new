@@ -35,6 +35,13 @@ def print_help(retcode):
           'a C header file from its parameters.')
     print('')
 
+    print('COMMAND collect')
+    print('Usage: collect [rest|open|grip|key]')
+    print('Collects training EMG data for a specific gesture from the ESP32. ' +
+          'Monitors serial port for 15s, collecting all received EMG data into' +
+          'a CSV file for later use.')
+    print('')
+
     print('COMMAND help')
     print('Show this help message')
     print('')
