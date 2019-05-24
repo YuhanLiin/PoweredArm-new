@@ -1,3 +1,5 @@
+import time
+import serial
 import numpy as np
 
 def aggregate_csv(data_files):
@@ -39,3 +41,13 @@ def create_dataset(data, proportions):
     X, y = chunk[:, :-1], chunk[:, -1]
     yield X
     yield y
+
+def collect_from_serial():
+    with serial.Serial('/dev/ttyUSB0', 115200, xonxoff=True) as ser:
+        timeout = time.time() + 15
+        while time.time() < timeout:
+            line = ser.readline().decode('utf-8')
+            if line.startswith("_DATA_"):
+                data = line.split()[1:]
+                data = [int(i) for i in data]
+                print(data)

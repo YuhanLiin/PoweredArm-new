@@ -3,6 +3,7 @@ import os
 import sys
 from functools import reduce
 from poweredarm.classifier import LinearClassifier
+from poweredarm.data_processing import collect_from_serial
 from poweredarm.train_classifier import (train_linear_classifier,
                                          evaluate_linear_classifier)
 
@@ -72,6 +73,9 @@ if __name__ == '__main__':
             os.mkdir('out')
         classifier.to_header(classifier_file, header)
         print('Generate header {} using classifier {}'.format(header, classifier_file))
+
+    elif command == 'collect':
+        collect_from_serial()
 
     elif command == 'help':
         print_help(0)
