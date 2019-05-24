@@ -5,7 +5,8 @@ from functools import reduce
 from poweredarm.classifier import LinearClassifier
 from poweredarm.data_processing import collect_from_serial
 from poweredarm.train_classifier import (train_linear_classifier,
-                                         evaluate_linear_classifier)
+                                         evaluate_linear_classifier,
+                                         plot_learning_curves)
 from poweredarm.util import Gesture, dated_name
 
 def print_results(acc, recalls):
@@ -21,6 +22,11 @@ def print_help(retcode):
     print('COMMAND train')
     print('Usage: train [..data_files]')
     print('Trains a classifier using the supplied CSV data files and saves it.')
+    print('')
+
+    print('COMMAND curve')
+    print('Usage: curve [..data_files]')
+    print('Plot a learning curve for the data from 5 to 2000 samples.')
     print('')
 
     print('COMMAND evaluate')
@@ -61,6 +67,14 @@ if __name__ == '__main__':
 
         acc, recalls = train_linear_classifier(data_files, True, True)
         print_results(acc, recalls)
+
+    elif command == 'curve':
+        data_files = sys.argv[2:]
+        if len(data_files) == 0:
+            print("No data files detected for the 'curve' option")
+            sys.exit(1)
+
+        plot_learning_curves(data_files)
 
     elif command == 'evaluate':
         classifier_file = sys.argv[2]
