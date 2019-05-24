@@ -1,6 +1,7 @@
-from enum import Enum
+from enum import Enum, unique
 from datetime import datetime
 
+@unique
 class Gesture(Enum):
     rest = 0
     open = 1

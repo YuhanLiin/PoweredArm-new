@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from poweredarm.classifier import LinearClassifier
 from poweredarm.data_processing import (aggregate_csv, create_dataset)
-from poweredarm.util import dated_name
+from poweredarm.util import dated_name, Gesture
 
 def visualize_relationships(X):
     for i in range(8):
@@ -27,7 +27,7 @@ def train_linear_classifier(data_files, save=False, show_graphs=False):
     # 80-20 data split
     X, y, Xtest, ytest = create_dataset(data, [0.8])
 
-    classifier = LinearClassifier(num_classes=4, num_features=8)
+    classifier = LinearClassifier(num_classes=len(Gesture), num_features=8)
 
     costs = classifier.train(X, y, rate=0.02, num_iter=1500)
 
