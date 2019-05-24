@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from poweredarm.classifier import LinearClassifier
 from poweredarm.data_processing import (aggregate_csv, create_dataset)
+from poweredarm.util import dated_name
 
 def visualize_relationships(X):
     for i in range(8):
@@ -43,10 +44,8 @@ def train_linear_classifier(data_files, save=False, show_graphs=False):
 
     acc, recalls = classifier.evaluate(Xtest, ytest)
     if save:
-        cls_file = path.join(
-            'data', 'classifiers',
-            'lin-cls-{:%Y-%m-%d-%H-%M-%S}-{:.5g}'.format(datetime.today(), acc * 100)
-        )
+        cls_file = path.join( 'data', 'classifiers',
+                dated_name('lin-cls-{:.5g}'.format(acc * 100)))
         print('Save classifier to {}'.format(cls_file))
         classifier.save(cls_file)
 

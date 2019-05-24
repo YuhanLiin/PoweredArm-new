@@ -6,6 +6,7 @@ from poweredarm.classifier import LinearClassifier
 from poweredarm.data_processing import collect_from_serial
 from poweredarm.train_classifier import (train_linear_classifier,
                                          evaluate_linear_classifier)
+from poweredarm.util import Gesture, dated_name
 
 def print_results(acc, recalls):
     print('Classifier predicted with accuracy of: {}'.format(acc * 100))
@@ -75,7 +76,10 @@ if __name__ == '__main__':
         print('Generate header {} using classifier {}'.format(header, classifier_file))
 
     elif command == 'collect':
-        collect_from_serial()
+        # Needs to be one of the names in the Gesture enum
+        gesture = sys.argv[2]
+        label = Gesture[gesture].value
+        collect_from_serial('data/dataset/{}.csv'.format(dated_name(gesture)), label)
 
     elif command == 'help':
         print_help(0)

@@ -1,3 +1,4 @@
+import csv
 import time
 import serial
 import numpy as np
@@ -42,12 +43,21 @@ def create_dataset(data, proportions):
     yield X
     yield y
 
-def collect_from_serial():
+def collect_from_serial(filename, label):
+    """
+    Reads output data from USB serial port for some time and puts it
+    into CSV data file along with the supplied label. Used to create
+    labelled training data.
+    """
     with serial.Serial('/dev/ttyUSB0', 115200, xonxoff=True) as ser:
-        timeout = time.time() + 15
-        while time.time() < timeout:
-            line = ser.readline().decode('utf-8')
-            if line.startswith("_DATA_"):
-                data = line.split()[1:]
-                data = [int(i) for i in data]
-                print(data)
+        with open(filename, 'w') as csvfile:
+            writer = csv.writer(csvfile)
+
+            timeout = time.time() + 15
+            while time.time() < timeout:
+                line = ser.readline().decode('utf-8')
+
+                if line.startswith("_DATA_"):
+                    data = line.split()[1:] + [str(label)]
+                    print(data)
+                    writer.writerow(data)
