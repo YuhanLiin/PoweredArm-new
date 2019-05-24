@@ -1,6 +1,7 @@
 import csv
 import time
 import serial
+from poweredarm.util import NUM_FEATURES
 import numpy as np
 
 def aggregate_csv(data_files):
@@ -58,6 +59,8 @@ def collect_from_serial(filename, label):
                 line = ser.readline().decode('utf-8')
 
                 if line.startswith("_DATA_"):
-                    data = line.split()[1:] + [str(label)]
+                    data = line.split()[1:NUM_FEATURES + 1]
+                    # Type check the values
+                    data = [int(i) for i in data] + [label]
                     print(data)
                     writer.writerow(data)

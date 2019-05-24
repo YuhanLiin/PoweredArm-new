@@ -10,3 +10,6 @@ class Gesture(Enum):
 
 def dated_name(stem):
     return '{}-{:%Y-%m-%d-%H-%M-%S}'.format(stem, datetime.today())
+
+NUM_CLASSES = len(Gesture)
+NUM_FEATURES = 8

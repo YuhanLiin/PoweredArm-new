@@ -35,24 +35,27 @@ static bool doConnect = false;
 static BLEAddress *pServerAddress = NULL;
 static BLERemoteCharacteristic* pRemoteCharacteristic = NULL;
 
+static void outputEmgData(uint8_t* pData, size_t length) {
+    // Prevent this print operation from being interrupted by other prints
+    /*FILE * err = _GLOBAL_REENT->_stderr;*/
+    /*_GLOBAL_REENT->_stderr = fopen("/dev/null", "w");*/
+    // Indicates actual EMG data for Python code to pick up
+    printf("_DATA_: ");
+    for ( int i = 0; i < length; i ++) {
+        printf("%d ", (int8_t)pData[i]);
+    }
+    printf("\n");
+    /*_GLOBAL_REENT->_stderr = err;*/
+}
+
 static void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
     dbprintf("Notify callback for EMG Data Characteristic: %s\n",
             pBLERemoteCharacteristic->getUUID().toString().c_str());
     assert(length == 16);
 
-    // Indicates actual EMG data for Python code to pick up
-    printf("_DATA_: ");
-    for ( int i = 0; i < 8; i ++) {
-        printf("%d ", (int8_t)pData[i]);
-    }
-    printf("\n");
-
-    printf("_DATA_: ");
-    for ( int i = 8; i < 16; i ++) {
-        printf("%d ", (int8_t)pData[i]);
-    }
-    printf("\n");
+    outputEmgData(pData, 8);
+    outputEmgData(pData + 8, 8);
 }
 
 bool connectToServer(BLEAddress pAddress) {
@@ -178,6 +181,8 @@ void app_main()
     while (!connectToServer(*pServerAddress)) {
         dbprintf("Can't connect to Myo. Retrying.\n");
     }
-    while (true);
-    //vTaskDelay(1000 / portTICK_PERIOD_MS);
+    dbprintf("Connected to Myo!\n");
+    // Blocks current task. This yields CPU0 to IDLE task so watchdog timer
+    // doesnt complain
+    while (true) vTaskDelay(100 / portTICK_PERIOD_MS);
 }
