@@ -25,18 +25,18 @@ static BLEUUID    emgCUUID("d5060105-a904-deb9-4748-2c7f4a124842");
 // EMG characteristic UUID 2
 static BLEUUID    emgC2UUID("d5060305-a904-deb9-4748-2c7f4a124842");
 
-static BLEAddress *pServerAddress;
 static bool doConnect = false;
-static bool connected = false;
-static BLERemoteCharacteristic* pRemoteCharacteristic;
+static BLEAddress *pServerAddress = NULL;
+static BLERemoteCharacteristic* pRemoteCharacteristic = NULL;
 
 static void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
     printf("Notify callback for EMG Data Characteristic: %s\n",
             pBLERemoteCharacteristic->getUUID().toString().c_str());
+    printf("Length: %zu\n", length);
     for ( int i = 0; i < length; i ++)
     {
-      printf("%#04X ", (int8_t)pData[i]);
+      printf("<0x%02X> ", pData[i]);
     }
     printf("\n");
 }
@@ -137,46 +137,33 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
   } // onResult
 }; // MyAdvertisedDeviceCallbacks
 
-void setup() {
-  printf("Starting Arduino BLE Client application...\n");
-  BLEDevice::init("");
-
-  // Retrieve a Scanner and set the callback we want to use to be informed when we
-  // have detected a new device.  Specify that we want active scanning and start the
-  // scan to run for 30 seconds.
-  BLEScan* pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(true);
-  pBLEScan->start(30);
-} // End of setup.
-
-
-// This is the Arduino main loop functio
-void loop() {
-
-  // If the flag "doConnect" is true then we have scanned for and found the desired
-  // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
-  // connected we set the connected flag to be true.
-  if (doConnect == true) {
-    if (connectToServer(*pServerAddress)) {
-      printf("We are now connected to the BLE Server.\n");
-      connected = true;
-    } else {
-      printf("We have failed to connect to the server; there is nothin more we will do.\n");
-    }
-    doConnect = false;
-  }
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
-} // End of loop
-
 extern "C" {
     void app_main();
 }
 
 void app_main()
 {
-    printf("Hello world!\n");
+    printf("Starting Arduino BLE Client application...\n");
+    BLEDevice::init("");
 
-    setup();
-    while (true) loop();
+    // Retrieve a Scanner and set the callback we want to use to be informed
+    // when we have detected a new device.  Specify that we want active
+    // scanning and start the scan to run for 30 seconds.
+    BLEScan* pBLEScan = BLEDevice::getScan();
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+    pBLEScan->setActiveScan(true);
+
+    // Keep scanning until we find the Myo
+    do {
+        printf("Trying to scan Myo.\n");
+        pBLEScan->start(30);
+    } while (!doConnect);
+    printf("Scanned Myo.\n");
+
+    // Keep trying to connect until we succeed
+    while (!connectToServer(*pServerAddress)) {
+        printf("Can't connect to Myo. Retrying.\n");
+    }
+    while (true);
+    //vTaskDelay(1000 / portTICK_PERIOD_MS);
 }
