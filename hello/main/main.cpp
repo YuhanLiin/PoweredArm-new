@@ -26,96 +26,93 @@ static BLEUUID    emgCUUID("d5060105-a904-deb9-4748-2c7f4a124842");
 static BLEUUID    emgC2UUID("d5060305-a904-deb9-4748-2c7f4a124842");
 
 static BLEAddress *pServerAddress;
-static boolean doConnect = false;
-static boolean connected = false;
+static bool doConnect = false;
+static bool connected = false;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
 
 static void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-    Serial.print("Notify callback for EMG Data Characteristic: ");
-    Serial.println(pBLERemoteCharacteristic->getUUID().toString().c_str());
+    printf("Notify callback for EMG Data Characteristic: %s\n",
+            pBLERemoteCharacteristic->getUUID().toString().c_str());
     for ( int i = 0; i < length; i ++)
     {
-      Serial.println((int8_t)pData[i]);
-      Serial.print(" ");
+      printf("%#04X ", (int8_t)pData[i]);
     }
+    printf("\n");
 }
 
 bool connectToServer(BLEAddress pAddress) {
-    Serial.print("Forming a connection to ");
-    Serial.println(pAddress.toString().c_str());
+    printf("Forming a connection to %s\n", pAddress.toString().c_str());
 
     BLEClient*  pClient  = BLEDevice::createClient();
-    Serial.println(" - Created client");
+    printf(" - Created client\n");
 
     // Connect to the remove BLE Server.
     pClient->connect(pAddress);
-    Serial.println(" - Connected to server");
+    printf(" - Connected to server\n");
 
     // Obtain a reference to the service we are after in the remote BLE server.
     BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
     if (pRemoteService == nullptr) {
-      Serial.print("Failed to find our service UUID: ");
-      Serial.println(serviceUUID.toString().c_str());
+      printf("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
       return false;
     }
-    Serial.println(" - Found our service");
+    printf(" - Found our service\n");
 
     // Obtain a reference to the characteristic in the service of the remote BLE server.
     pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
     if (pRemoteCharacteristic == nullptr) {
-      Serial.print("Failed to find our characteristic UUID: ");
-      Serial.println(charUUID.toString().c_str());
+      printf("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
       return false;
     }
-    Serial.println(" - Found our characteristic");
+    printf(" - Found our characteristic\n");
 
     // set sleep mode
     uint8_t sleepPkt[3] = {0x09, 0x01, 0x01};
     pRemoteCharacteristic->writeValue(sleepPkt, 3, true);
-    delay(500);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
 
     // set EMG mode to send filtered
     uint8_t emgPkt[5] = {0x01, 0x03, 0x02, 0x00, 0x00 };
     pRemoteCharacteristic->writeValue(emgPkt, 5, true);
-    delay(500);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
 
     const uint8_t notificationOn[] = {0x01, 0x00};
 
     // Obtain reference to EMG service UUID
     pRemoteService = pClient->getService(emgSUUID);
     if (pRemoteService == nullptr) {
-      Serial.print("Failed to find our service UUID: ");
-      Serial.println(emgSUUID.toString().c_str());
+      printf("Failed to find our service UUID: %s\n", emgSUUID.toString().c_str());
       return false;
     }
-    Serial.println(" - Found our EMG service");
-    Serial.println(emgSUUID.toString().c_str());
+    printf(" - Found our EMG service\n");
+    printf("%s\n", emgSUUID.toString().c_str());
 
 // Obtain a reference to the characteristic in the service of the remote BLE server.
     pRemoteCharacteristic = pRemoteService->getCharacteristic(emgCUUID);
     if (pRemoteCharacteristic == nullptr) {
-      Serial.print("Failed to find our characteristic UUID: ");
-      Serial.println(emgCUUID.toString().c_str());
+      printf("Failed to find our characteristic UUID: %s\n", emgCUUID.toString().c_str());
       return false;
     }
-    Serial.println(" - Found our EMG characteristic");
-    Serial.println(emgCUUID.toString().c_str());
+    printf(" - Found our EMG characteristic\n");
+    printf("%s\n", emgCUUID.toString().c_str());
     pRemoteCharacteristic->registerForNotify(notifyCallback);
     pRemoteCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue((uint8_t*)notificationOn, 2, true);
 
     // Obtain a reference to the characteristic in the service of the remote BLE server.
     pRemoteCharacteristic = pRemoteService->getCharacteristic(emgC2UUID);
     if (pRemoteCharacteristic == nullptr) {
-      Serial.print("Failed to find our characteristic UUID: ");
-      Serial.println(emgC2UUID.toString().c_str());
+      printf("Failed to find our characteristic UUID: %s\n", emgC2UUID.toString().c_str());
       return false;
     }
-    Serial.println(" - Found our EMG characteristic");
-    Serial.println(emgC2UUID.toString().c_str());
+    printf(" - Found our EMG characteristic\n");
+    printf("%s\n", emgC2UUID.toString().c_str());
     pRemoteCharacteristic->registerForNotify(notifyCallback);
     pRemoteCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue((uint8_t*)notificationOn, 2, true);
+
+    return true;
 }
+
 /**
  * Scan for BLE servers and find the first one that advertises the service we are looking for.
  */
@@ -124,14 +121,13 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
    * Called for each advertising BLE server.
    */
   void onResult(BLEAdvertisedDevice advertisedDevice) {
-    Serial.print("BLE Advertised Device found: ");
-    Serial.println(advertisedDevice.toString().c_str());
+    printf("BLE Advertised Device found: %s\n", advertisedDevice.toString().c_str());
 
     // We have found a device, let us now see if it contains the service we are looking for.
     if (advertisedDevice.haveServiceUUID() && advertisedDevice.getServiceUUID().equals(serviceUUID)) {
 
       //
-      Serial.print("Found our device!  address: ");
+      printf("Found our device!\n");
       advertisedDevice.getScan()->stop();
 
       pServerAddress = new BLEAddress(advertisedDevice.getAddress());
@@ -142,8 +138,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 }; // MyAdvertisedDeviceCallbacks
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println("Starting Arduino BLE Client application...");
+  printf("Starting Arduino BLE Client application...\n");
   BLEDevice::init("");
 
   // Retrieve a Scanner and set the callback we want to use to be informed when we
@@ -164,14 +159,14 @@ void loop() {
   // connected we set the connected flag to be true.
   if (doConnect == true) {
     if (connectToServer(*pServerAddress)) {
-      Serial.println("We are now connected to the BLE Server.");
+      printf("We are now connected to the BLE Server.\n");
       connected = true;
     } else {
-      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+      printf("We have failed to connect to the server; there is nothin more we will do.\n");
     }
     doConnect = false;
   }
-  delay(1000);
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
 } // End of loop
 
 extern "C" {
@@ -182,24 +177,6 @@ void app_main()
 {
     printf("Hello world!\n");
 
-    /* Print chip information */
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    printf("This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
-            chip_info.cores,
-            (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-            (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
-
-    printf("silicon revision %d, ", chip_info.revision);
-
-    printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
-            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
-
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
+    setup();
+    while (true) loop();
 }
