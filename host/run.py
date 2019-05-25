@@ -3,7 +3,7 @@ import os
 import sys
 from functools import reduce
 from poweredarm.classifier import LinearClassifier
-from poweredarm.data_processing import collect_from_serial
+from poweredarm.data_processing import collect_from_serial, graph_csv
 from poweredarm.train_classifier import (train_linear_classifier,
                                          evaluate_linear_classifier,
                                          plot_learning_curves)
@@ -101,6 +101,10 @@ if __name__ == '__main__':
         gesture = sys.argv[2]
         label = Gesture[gesture].value
         collect_from_serial('data/dataset/{}.csv'.format(dated_name(gesture)), label)
+
+    elif command == 'emg':
+        csvfile = sys.argv[2]
+        graph_csv(csvfile)
 
     elif command == 'help':
         print_help(0)

@@ -1,6 +1,7 @@
 import csv
 import time
 import serial
+from matplotlib import pyplot as plt
 from poweredarm.util import NUM_FEATURES
 import numpy as np
 
@@ -43,6 +44,15 @@ def create_dataset(data, proportions):
     X, y = chunk[:, :-1], chunk[:, -1]
     yield X
     yield y
+
+def graph_csv(filename):
+    fdata = np.loadtxt(filename, delimiter=',', dtype=np.float32)
+    fdata = fdata[:, :8]
+    plt.plot(np.arange(np.shape(fdata)[0]), fdata)
+    plt.title('EMG Data for {}'.format(filename))
+    plt.xlabel('Time')
+    plt.ylabel('Magnitude')
+    plt.show()
 
 def collect_from_serial(filename, label):
     """
