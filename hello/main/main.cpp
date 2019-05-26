@@ -46,22 +46,27 @@ static BLEAddress *serverAddress = NULL;
 
 uint8_t notificationOn[] = {0x01, 0x00};
 
-static void outputEmgData(uint8_t* pData, size_t length) {
+static void notifyMagicCallback(
+  BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+    assert(length == 17);
+
     // Prevent this print operation from being interrupted by other prints
-    /*FILE * err = _GLOBAL_REENT->_stderr;*/
-    /*_GLOBAL_REENT->_stderr = fopen("/dev/null", "w");*/
     // Indicates actual EMG data for Python code to pick up
     printf("_DATA_: ");
-    for ( int i = 0; i < length; i ++) {
+    for (size_t i = 0; i < 16; i+=2) {
+        // Assume little endian ordering
+        uint16_t emg = (pData[i+1] << 8) | pData[i];
+        printf("%u ", emg);
+    }
+    printf("\n");
+}
+
+static void outputEmgData(uint8_t* pData, size_t length) {
+    printf("_DATA_: ");
+    for (size_t i = 0; i < length; i ++) {
         printf("%d ", (int8_t)pData[i]);
     }
     printf("\n");
-    /*_GLOBAL_REENT->_stderr = err;*/
-}
-
-static void notifyMagicCallback(
-  BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-    dbprintf("%d\n", length);
 }
 
 static void notifyEmgCallback(
@@ -161,19 +166,22 @@ bool connectToServer(BLEAddress address) {
     remoteCharacteristic->writeValue(sleepPkt, 3, true);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
-    // set EMG mode to send filtered
+    // By using 0x01 in the 3rd byte, we activate the hidden, *magic* functionality
+    // of sending rectified and filtered EMG data thru a separate characteristc
     uint8_t emgPkt[5] = {0x01, 0x03, 0x01, 0x00, 0x00 };
     remoteCharacteristic->writeValue(emgPkt, 5, true);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
 
+    // Prepare to receive magic bytes
     BLERemoteCharacteristic* magicCharacteristic = magicService->getCharacteristicsByHandle()->at(magicHandle);
     setupNotify(magicCharacteristic, notifyMagicCallback);
 
-    if (!subscribeToEmgCharacteristic(emgCUUID, emgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC2UUID, emgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC3UUID, emgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC4UUID, emgService)) return false;
+    // This is where the non-magic bytes go
+    /*if (!subscribeToEmgCharacteristic(emgCUUID, emgService)) return false;*/
+    /*if (!subscribeToEmgCharacteristic(emgC2UUID, emgService)) return false;*/
+    /*if (!subscribeToEmgCharacteristic(emgC3UUID, emgService)) return false;*/
+    /*if (!subscribeToEmgCharacteristic(emgC4UUID, emgService)) return false;*/
 
     return true;
 }
