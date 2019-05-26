@@ -42,10 +42,15 @@ def print_help(retcode):
     print('')
 
     print('COMMAND collect')
-    print('Usage: collect [rest|open|grip|key]')
+    print('Usage: collect gesture_name')
     print('Collects training EMG data for a specific gesture from the ESP32. ' +
-          'Monitors serial port for 15s, collecting all received EMG data into' +
+          'Monitors serial port for 15s, collecting all received EMG data into ' +
           'a CSV file for later use.')
+    print('')
+
+    print('COMMAND emg')
+    print('Usage: emg csv_file')
+    print('Graphs a CSV EMG dataset over time. Assumes that the rows are in chronological order.')
     print('')
 
     print('COMMAND help')
