@@ -4,6 +4,7 @@ import serial
 from matplotlib import pyplot as plt
 from poweredarm.util import NUM_FEATURES
 import numpy as np
+import platform
 
 def aggregate_csv(data_files):
     """
@@ -60,7 +61,12 @@ def collect_from_serial(filename, label):
     into CSV data file along with the supplied label. Used to create
     labelled training data.
     """
-    with serial.Serial('/dev/ttyUSB0', 115200, xonxoff=True) as ser:
+    if platform.system() == 'Windows':
+        port = 'COM12'
+    else:
+        port = '/dev/ttyUSB0'
+
+    with serial.Serial(port, 115200, xonxoff=True) as ser:
         with open(filename, 'w') as csvfile:
             writer = csv.writer(csvfile)
 
