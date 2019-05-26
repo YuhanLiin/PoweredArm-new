@@ -42,8 +42,7 @@ static BLEUUID    magicSUUID(myoUUID("0004"));
 static const uint16_t magicHandle = 0x27;
 
 static bool doConnect = false;
-static BLEAddress *pServerAddress = NULL;
-static BLERemoteCharacteristic* pRemoteCharacteristic = NULL;
+static BLEAddress *serverAddress = NULL;
 
 static void outputEmgData(uint8_t* pData, size_t length) {
     // Prevent this print operation from being interrupted by other prints
@@ -68,63 +67,75 @@ static void notifyCallback(
     outputEmgData(pData + 8, 8);
 }
 
-bool subscribeToEmgCharacteristic(BLEUUID & uuid, const uint8_t * notificationOn, BLERemoteService * service) {
-    // Obtain a reference to the characteristic in the service of the remote BLE server.
-    BLERemoteCharacteristic * pRemoteCharacteristic = service->getCharacteristic(uuid);
-    if (pRemoteCharacteristic == nullptr) {
+static bool subscribeToEmgCharacteristic(BLEUUID & uuid, uint8_t * notificationOn, BLERemoteService * service) {
+    // Obtain a reference to the characteristic in the service of the BLE server.
+    BLERemoteCharacteristic * remoteCharacteristic = service->getCharacteristic(uuid);
+    if (remoteCharacteristic == nullptr) {
       dbprintf("Failed to find our characteristic UUID: %s\n", uuid.toString().c_str());
       return false;
     }
     dbprintf(" - Found our EMG characteristic\n");
     dbprintf("%s\n", uuid.toString().c_str());
-    pRemoteCharacteristic->registerForNotify(notifyCallback);
-    pRemoteCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue((uint8_t*)notificationOn, 2, true);
+    remoteCharacteristic->registerForNotify(notifyCallback);
+    remoteCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue(notificationOn, 2, true);
     return true;
 }
 
-bool connectToServer(BLEAddress pAddress) {
-    dbprintf("Forming a connection to %s\n", pAddress.toString().c_str());
+// Print all services and the handles of the characteristics of each service
+static void printAllAttributes(BLEClient * client) {
+    dbprintf("All Myo BLE attributes\n");
+    auto s = client->getServices();
+    for (auto l = s->begin(); l != s->end(); l++) {
+        dbprintf("%s: ", l->first.c_str());
+        auto m = l->second->getCharacteristicsByHandle();
+        for (auto it = m->begin(); it != m->end(); it++) {
+            dbprintf("%X ", it->first);
+        }
+        dbprintf("\n");
+    }
+}
 
-    BLEClient*  pClient  = BLEDevice::createClient();
+bool connectToServer(BLEAddress address) {
+    dbprintf("Forming a connection to %s\n", address.toString().c_str());
+
+    BLEClient*  client  = BLEDevice::createClient();
     dbprintf(" - Created client\n");
 
     // Connect to the remove BLE Server.
-    pClient->connect(pAddress);
+    client->connect(address);
     dbprintf(" - Connected to server\n");
 
-    auto s = pClient->getServices();
-    for (auto l = s->begin(); l != s->end(); l++) {
-        printf("%s", l->first.c_str());
-        auto m = l->second->getCharacteristicsByHandle();
-        for (auto it = m->begin(); it != m->end(); it++) {
-            printf("%X ", it->first);
-        }
-        printf("\n");
-    }
+    printAllAttributes(client);
 
     // Obtain a reference to the service we are after in the remote BLE server.
-    BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
-    if (pRemoteService == nullptr) {
+    BLERemoteService* remoteService = client->getService(serviceUUID);
+    if (remoteService == nullptr) {
       dbprintf("Failed to find our service UUID: %s\n", serviceUUID.toString().c_str());
       return false;
     }
     dbprintf(" - Found our service\n");
 
     // Obtain reference to EMG service UUID
-    BLERemoteService* pEmgService = pClient->getService(emgSUUID);
-    if (pEmgService == nullptr) {
+    BLERemoteService* emgService = client->getService(emgSUUID);
+    if (emgService == nullptr) {
       dbprintf("Failed to find our service UUID: %s\n", emgSUUID.toString().c_str());
       return false;
     }
     dbprintf(" - Found our EMG service\n");
-    dbprintf("%s\n", emgSUUID.toString().c_str());
 
-    //BLERemoteCharacteristic * char1 = pRemoteService->getCharacteristicsByHandle()->at(0x28);
-    //BLERemoteCharacteristic * char2 = pEmgService->getCharacteristicsByHandle()->at(0x28);
+    // Obtain reference to EMG service UUID
+    BLERemoteService* magicService = client->getService(magicSUUID);
+    if (magicService == nullptr) {
+      dbprintf("Failed to find our service UUID: %s\n", magicSUUID.toString().c_str());
+      return false;
+    }
+    dbprintf(" - Found our magic service\n");
+
+    BLERemoteCharacteristic* magicCharacteristic = magicService->getCharacteristicsByHandle()->at(magicHandle);
 
     // Obtain a reference to the characteristic in the service of the remote BLE server.
-    pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
-    if (pRemoteCharacteristic == nullptr) {
+    BLERemoteCharacteristic * remoteCharacteristic = remoteService->getCharacteristic(charUUID);
+    if (remoteCharacteristic == nullptr) {
       dbprintf("Failed to find our characteristic UUID: %s\n", charUUID.toString().c_str());
       return false;
     }
@@ -132,20 +143,23 @@ bool connectToServer(BLEAddress pAddress) {
 
     // set sleep mode
     uint8_t sleepPkt[3] = {0x09, 0x01, 0x01};
-    pRemoteCharacteristic->writeValue(sleepPkt, 3, true);
+    remoteCharacteristic->writeValue(sleepPkt, 3, true);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    uint8_t notificationOn[] = {0x01, 0x00};
+    magicCharacteristic->writeValue(notificationOn, 2, true);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
     // set EMG mode to send filtered
-    uint8_t emgPkt[5] = {0x01, 0x03, 0x02, 0x00, 0x00 };
-    pRemoteCharacteristic->writeValue(emgPkt, 5, true);
+    uint8_t emgPkt[5] = {0x01, 0x03, 0x01, 0x00, 0x00 };
+    remoteCharacteristic->writeValue(emgPkt, 5, true);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
-    const uint8_t notificationOn[] = {0x01, 0x00};
 
-    if (!subscribeToEmgCharacteristic(emgCUUID, notificationOn, pEmgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC2UUID, notificationOn, pEmgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC3UUID, notificationOn, pEmgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC4UUID, notificationOn, pEmgService)) return false;
+    if (!subscribeToEmgCharacteristic(emgCUUID, notificationOn, emgService)) return false;
+    if (!subscribeToEmgCharacteristic(emgC2UUID, notificationOn, emgService)) return false;
+    if (!subscribeToEmgCharacteristic(emgC3UUID, notificationOn, emgService)) return false;
+    if (!subscribeToEmgCharacteristic(emgC4UUID, notificationOn, emgService)) return false;
 
     return true;
 }
@@ -167,7 +181,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
       dbprintf("Found our device!\n");
       advertisedDevice.getScan()->stop();
 
-      pServerAddress = new BLEAddress(advertisedDevice.getAddress());
+      serverAddress = new BLEAddress(advertisedDevice.getAddress());
       doConnect = true;
 
     } // Found our server
@@ -198,7 +212,7 @@ void app_main()
     dbprintf("Scanned Myo.\n");
 
     // Keep trying to connect until we succeed
-    while (!connectToServer(*pServerAddress)) {
+    while (!connectToServer(*serverAddress)) {
         dbprintf("Can't connect to Myo. Retrying.\n");
     }
     dbprintf("Connected to Myo!\n");
