@@ -44,6 +44,8 @@ static const uint16_t magicHandle = 0x27;
 static bool doConnect = false;
 static BLEAddress *serverAddress = NULL;
 
+uint8_t notificationOn[] = {0x01, 0x00};
+
 static void outputEmgData(uint8_t* pData, size_t length) {
     // Prevent this print operation from being interrupted by other prints
     /*FILE * err = _GLOBAL_REENT->_stderr;*/
@@ -57,7 +59,12 @@ static void outputEmgData(uint8_t* pData, size_t length) {
     /*_GLOBAL_REENT->_stderr = err;*/
 }
 
-static void notifyCallback(
+static void notifyMagicCallback(
+  BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+    dbprintf("%d\n", length);
+}
+
+static void notifyEmgCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
     dbprintf("Notify callback for EMG Data Characteristic: %s\n",
             pBLERemoteCharacteristic->getUUID().toString().c_str());
@@ -67,7 +74,12 @@ static void notifyCallback(
     outputEmgData(pData + 8, 8);
 }
 
-static bool subscribeToEmgCharacteristic(BLEUUID & uuid, uint8_t * notificationOn, BLERemoteService * service) {
+#define setupNotify(characteristic, cb) do {\
+    characteristic->registerForNotify(cb);\
+    characteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue(notificationOn, 2, true);\
+} while(false)
+
+static bool subscribeToEmgCharacteristic(BLEUUID & uuid, BLERemoteService * service) {
     // Obtain a reference to the characteristic in the service of the BLE server.
     BLERemoteCharacteristic * remoteCharacteristic = service->getCharacteristic(uuid);
     if (remoteCharacteristic == nullptr) {
@@ -76,8 +88,8 @@ static bool subscribeToEmgCharacteristic(BLEUUID & uuid, uint8_t * notificationO
     }
     dbprintf(" - Found our EMG characteristic\n");
     dbprintf("%s\n", uuid.toString().c_str());
-    remoteCharacteristic->registerForNotify(notifyCallback);
-    remoteCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue(notificationOn, 2, true);
+
+    setupNotify(remoteCharacteristic, notifyEmgCallback);
     return true;
 }
 
@@ -135,7 +147,6 @@ bool connectToServer(BLEAddress address) {
     }
     dbprintf(" - Found our magic service\n");
 
-    BLERemoteCharacteristic* magicCharacteristic = magicService->getCharacteristicsByHandle()->at(magicHandle);
 
     // Obtain a reference to the characteristic in the service of the remote BLE server.
     BLERemoteCharacteristic * remoteCharacteristic = remoteService->getCharacteristic(charUUID);
@@ -150,20 +161,19 @@ bool connectToServer(BLEAddress address) {
     remoteCharacteristic->writeValue(sleepPkt, 3, true);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
-    uint8_t notificationOn[] = {0x01, 0x00};
-    magicCharacteristic->writeValue(notificationOn, 2, true);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-
     // set EMG mode to send filtered
     uint8_t emgPkt[5] = {0x01, 0x03, 0x01, 0x00, 0x00 };
     remoteCharacteristic->writeValue(emgPkt, 5, true);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
 
-    if (!subscribeToEmgCharacteristic(emgCUUID, notificationOn, emgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC2UUID, notificationOn, emgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC3UUID, notificationOn, emgService)) return false;
-    if (!subscribeToEmgCharacteristic(emgC4UUID, notificationOn, emgService)) return false;
+    BLERemoteCharacteristic* magicCharacteristic = magicService->getCharacteristicsByHandle()->at(magicHandle);
+    setupNotify(magicCharacteristic, notifyMagicCallback);
+
+    if (!subscribeToEmgCharacteristic(emgCUUID, emgService)) return false;
+    if (!subscribeToEmgCharacteristic(emgC2UUID, emgService)) return false;
+    if (!subscribeToEmgCharacteristic(emgC3UUID, emgService)) return false;
+    if (!subscribeToEmgCharacteristic(emgC4UUID, emgService)) return false;
 
     return true;
 }
