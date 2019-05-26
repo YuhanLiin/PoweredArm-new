@@ -84,14 +84,18 @@ static bool subscribeToEmgCharacteristic(BLEUUID & uuid, uint8_t * notificationO
 // Print all services and the handles of the characteristics of each service
 static void printAllAttributes(BLEClient * client) {
     dbprintf("All Myo BLE attributes\n");
-    auto s = client->getServices();
-    for (auto l = s->begin(); l != s->end(); l++) {
-        dbprintf("%s: ", l->first.c_str());
-        auto m = l->second->getCharacteristicsByHandle();
-        for (auto it = m->begin(); it != m->end(); it++) {
-            dbprintf("%X ", it->first);
+    auto services = client->getServices();
+    for (auto i = services->begin(); i != services->end(); i++) {
+        dbprintf("%s:\n", i->first.c_str());
+        auto chars = i->second->getCharacteristicsByHandle();
+        for (auto j = chars->begin(); j != chars->end(); j++) {
+            dbprintf("  0x%X: ", j->first);
+            auto descriptors = j->second->getDescriptors();
+            for (auto k = descriptors->begin(); k != descriptors->end(); k++) {
+                dbprintf("%s ", k->first.c_str());
+            }
+            dbprintf("\n");
         }
-        dbprintf("\n");
     }
 }
 
