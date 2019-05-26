@@ -19,21 +19,27 @@
 #define dbprintf(...) printf(__VA_ARGS__)
 #endif
 
+// All Myo UUIDs are identical except for 2 bytes
+#define myoUUID(small) ("d506" small "-a904-deb9-4748-2c7f4a124842")
+
 // The remote service we wish to connect to.
-static BLEUUID serviceUUID("d5060001-a904-deb9-4748-2c7f4a124842");
+static BLEUUID serviceUUID(myoUUID("0001"));
 // The characteristic of the remote service we are interested in.
-static BLEUUID    charUUID("d5060401-a904-deb9-4748-2c7f4a124842");
+static BLEUUID    charUUID(myoUUID("0401"));
 
 // EMG service UUID
-static BLEUUID    emgSUUID("d5060005-a904-deb9-4748-2c7f4a124842");
+static BLEUUID    emgSUUID(myoUUID("0005"));
 // EMG characteristic UUID 1
-static BLEUUID    emgCUUID("d5060105-a904-deb9-4748-2c7f4a124842");
+static BLEUUID    emgCUUID(myoUUID("0105"));
 // EMG characteristic UUID 2
-static BLEUUID    emgC2UUID("d5060205-a904-deb9-4748-2c7f4a124842");
+static BLEUUID    emgC2UUID(myoUUID("0205"));
 // EMG characteristic UUID 3
-static BLEUUID    emgC3UUID("d5060305-a904-deb9-4748-2c7f4a124842");
+static BLEUUID    emgC3UUID(myoUUID("0305"));
 // EMG characteristic UUID 4
-static BLEUUID    emgC4UUID("d5060405-a904-deb9-4748-2c7f4a124842");
+static BLEUUID    emgC4UUID(myoUUID("0405"));
+
+static BLEUUID    magicSUUID(myoUUID("0004"));
+static const uint16_t magicHandle = 0x27;
 
 static bool doConnect = false;
 static BLEAddress *pServerAddress = NULL;
