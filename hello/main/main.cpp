@@ -28,16 +28,6 @@ static BLEUUID serviceUUID(myoUUID("0001"));
 // The characteristic of the remote service we are interested in.
 static BLEUUID    charUUID(myoUUID("0401"));
 
-// EMG service UUID
-static BLEUUID    emgSUUID(myoUUID("0005"));
-// EMG characteristic UUID 1
-static BLEUUID    emgCUUID(myoUUID("0105"));
-// EMG characteristic UUID 2
-static BLEUUID    emgC2UUID(myoUUID("0205"));
-// EMG characteristic UUID 3
-static BLEUUID    emgC3UUID(myoUUID("0305"));
-// EMG characteristic UUID 4
-static BLEUUID    emgC4UUID(myoUUID("0405"));
 // This is where the rectified data comes from
 static BLEUUID    magicSUUID(myoUUID("0004"));
 static const uint16_t magicHandle = 0x27;
@@ -72,42 +62,10 @@ static void notifyMagicCallback(
     printf("%d\n", run_classifier);
 }
 
-static void outputEmgData(uint8_t* pData, size_t length) {
-    printf("_DATA_: ");
-    for (size_t i = 0; i < length; i ++) {
-        printf("%d ", (int8_t)pData[i]);
-    }
-    printf("\n");
-}
-
-static void notifyEmgCallback(
-  BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-    dbprintf("Notify callback for EMG Data Characteristic: %s\n",
-            pBLERemoteCharacteristic->getUUID().toString().c_str());
-    assert(length == 16);
-
-    outputEmgData(pData, 8);
-    outputEmgData(pData + 8, 8);
-}
-
 #define setupNotify(characteristic, cb) do {\
     characteristic->registerForNotify(cb);\
     characteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue(notificationOn, 2, true);\
 } while(false)
-
-static bool subscribeToEmgCharacteristic(BLEUUID & uuid, BLERemoteService * service) {
-    // Obtain a reference to the characteristic in the service of the BLE server.
-    BLERemoteCharacteristic * remoteCharacteristic = service->getCharacteristic(uuid);
-    if (remoteCharacteristic == nullptr) {
-      dbprintf("Failed to find our characteristic UUID: %s\n", uuid.toString().c_str());
-      return false;
-    }
-    dbprintf(" - Found our EMG characteristic\n");
-    dbprintf("%s\n", uuid.toString().c_str());
-
-    setupNotify(remoteCharacteristic, notifyEmgCallback);
-    return true;
-}
 
 // Print all services and the handles of the characteristics of each service
 static void printAllAttributes(BLEClient * client) {
@@ -148,14 +106,6 @@ bool connectToServer(BLEAddress address) {
     dbprintf(" - Found our service\n");
 
     // Obtain reference to EMG service UUID
-    BLERemoteService* emgService = client->getService(emgSUUID);
-    if (emgService == nullptr) {
-      dbprintf("Failed to find our service UUID: %s\n", emgSUUID.toString().c_str());
-      return false;
-    }
-    dbprintf(" - Found our EMG service\n");
-
-    // Obtain reference to EMG service UUID
     BLERemoteService* magicService = client->getService(magicSUUID);
     if (magicService == nullptr) {
       dbprintf("Failed to find our service UUID: %s\n", magicSUUID.toString().c_str());
@@ -183,16 +133,9 @@ bool connectToServer(BLEAddress address) {
     remoteCharacteristic->writeValue(emgPkt, 5, true);
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
-
     // Prepare to receive magic bytes
     BLERemoteCharacteristic* magicCharacteristic = magicService->getCharacteristicsByHandle()->at(magicHandle);
     setupNotify(magicCharacteristic, notifyMagicCallback);
-
-    // This is where the non-magic bytes go
-    /*if (!subscribeToEmgCharacteristic(emgCUUID, emgService)) return false;*/
-    /*if (!subscribeToEmgCharacteristic(emgC2UUID, emgService)) return false;*/
-    /*if (!subscribeToEmgCharacteristic(emgC3UUID, emgService)) return false;*/
-    /*if (!subscribeToEmgCharacteristic(emgC4UUID, emgService)) return false;*/
 
     return true;
 }
