@@ -12,6 +12,7 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
+#include "driver/gpio.h"
 
 #ifdef NDEBUG
 #define dbprintf(...) ()
@@ -37,21 +38,30 @@ static BLEUUID    emgC2UUID(myoUUID("0205"));
 static BLEUUID    emgC3UUID(myoUUID("0305"));
 // EMG characteristic UUID 4
 static BLEUUID    emgC4UUID(myoUUID("0405"));
-
+// This is where the rectified data comes from
 static BLEUUID    magicSUUID(myoUUID("0004"));
 static const uint16_t magicHandle = 0x27;
 
 static bool doConnect = false;
 static BLEAddress *serverAddress = NULL;
 
-uint8_t notificationOn[] = {0x01, 0x00};
+static uint8_t notificationOn[] = {0x01, 0x00};
+
+// The boot button
+static const gpio_num_t BUTTON = GPIO_NUM_0;
 
 static void notifyMagicCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
     assert(length == 17);
 
+    static bool run_classifier = false;
+    // Button is active low
+    if (!run_classifier && gpio_get_level(BUTTON) == 0) {
+        run_classifier = true;
+    }
+
     // Prevent this print operation from being interrupted by other prints
-    // Indicates actual EMG data for Python code to pick up
+    // _DATA_ indicates actual EMG data for Python code to pick up
     printf("_DATA_: ");
     for (size_t i = 0; i < 16; i+=2) {
         // Assume little endian ordering
@@ -59,6 +69,7 @@ static void notifyMagicCallback(
         printf("%u ", emg);
     }
     printf("\n");
+    printf("%d\n", run_classifier);
 }
 
 static void outputEmgData(uint8_t* pData, size_t length) {
@@ -216,6 +227,14 @@ extern "C" {
 
 void app_main()
 {
+    gpio_config_t io_conf;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    io_conf.pin_bit_mask = 1ULL << BUTTON;
+    gpio_config(&io_conf);
+
     dbprintf("Starting Arduino BLE Client application...\n");
     BLEDevice::init("");
 
