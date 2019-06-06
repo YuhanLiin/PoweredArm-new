@@ -53,7 +53,7 @@ def train_linear_classifier(data_files, save=False, show_graphs=False):
 
     classifier = LinearClassifier(num_classes=NUM_CLASSES, num_features=NUM_FEATURES)
 
-    costs = classifier.train(X, y, rate=0.001, num_iter=3000)
+    costs = classifier.train(X, y, rate=0.005, num_iter=3000)
 
     if show_graphs:
         plt.ioff()
