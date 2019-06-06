@@ -6,6 +6,11 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
+extern "C" {
+#include "predict.h"
+#include "classifier.h"
+}
+
 #include <stdio.h>
 #include <BLEDevice.h>
 #include "freertos/FreeRTOS.h"
@@ -40,11 +45,13 @@ static uint8_t notificationOn[] = {0x01, 0x00};
 // The boot button
 static const gpio_num_t BUTTON = GPIO_NUM_0;
 
+static float features[CLASSIFIER_NUM_FEATURES];
+
 static void notifyMagicCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
     assert(length == 17);
-
     static bool run_classifier = false;
+
     // Button is active low
     if (!run_classifier && gpio_get_level(BUTTON) == 0) {
         run_classifier = true;
@@ -53,13 +60,18 @@ static void notifyMagicCallback(
     // Prevent this print operation from being interrupted by other prints
     // _DATA_ indicates actual EMG data for Python code to pick up
     printf("_DATA_: ");
-    for (size_t i = 0; i < 16; i+=2) {
+    for (size_t i = 0, f = 0; i < 16; i+=2, f++) {
         // Assume little endian ordering
         uint16_t emg = (pData[i+1] << 8) | pData[i];
+        features[f] = emg;
         printf("%u ", emg);
     }
     printf("\n");
-    printf("%d\n", run_classifier);
+
+    if (run_classifier) {
+        int gesture = classify(features);
+        printf("%d\n", gesture);
+    }
 }
 
 #define setupNotify(characteristic, cb) do {\
