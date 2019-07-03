@@ -27,4 +27,7 @@ The script `run.py` is a command-line tool that allows you to train your classif
 Requires:
 - **ESP-IDF 4** installation instructions here: https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html.
 
+**Note:** On the IDF installation instructions it mentions that Python **2** is required to flash and run programs on the ESP32. The Host code, however, only runs on Python 3. To manage these separate Python versions use something like virtualenvs to create separate Python environments for running Host and IDF.
+
 Run "make flash" to compile and flash the code onto the board and "make monitor" to look at the outputs.
+Currently, pressing the boot button causes the classifier to run and display predictions.
