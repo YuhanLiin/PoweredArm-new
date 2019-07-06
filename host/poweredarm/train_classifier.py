@@ -2,7 +2,7 @@ from os import path
 from datetime import datetime
 import numpy as np
 from matplotlib import pyplot as plt
-from poweredarm.classifier import LinearClassifier
+from poweredarm.classifier import LinearClassifier, QuadraticClassifier
 from poweredarm.data_processing import (aggregate_csv, create_dataset)
 from poweredarm.util import dated_name, NUM_CLASSES, NUM_FEATURES
 
@@ -46,14 +46,14 @@ def plot_learning_curves(data_files):
     plt.legend(['Training set', 'Test set'])
     plt.show()
 
-def train_linear_classifier(data_files, save=False, show_graphs=False):
+def train_classifier(data_files, cls, rate, num_iter, save=False, show_graphs=False):
     data = aggregate_csv(data_files)
     # 80-20 data split
     X, y, Xtest, ytest = create_dataset(data, [0.8])
 
-    classifier = LinearClassifier(num_classes=NUM_CLASSES, num_features=NUM_FEATURES)
+    classifier = cls(num_classes=NUM_CLASSES, num_features=NUM_FEATURES)
 
-    costs = classifier.train(X, y, rate=0.005, num_iter=3000)
+    costs = classifier.train(X, y, rate=rate, num_iter=num_iter)
 
     if show_graphs:
         plt.ioff()
@@ -74,3 +74,9 @@ def train_linear_classifier(data_files, save=False, show_graphs=False):
         classifier.save(cls_file)
 
     return acc, recalls
+
+def train_linear_classifier(data_files, save=False, show_graphs=False):
+    return train_classifier(data_files, LinearClassifier, 0.005, 2000, save, show_graphs)
+
+def train_quadratic_classifier(data_files, save=False, show_graphs=False):
+    return train_classifier(data_files, QuadraticClassifier, 0.005, 2000, save, show_graphs)

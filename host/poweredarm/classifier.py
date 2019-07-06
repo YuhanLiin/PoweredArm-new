@@ -175,9 +175,9 @@ class LinearClassifier:
         Load a trained classifier from a NPZ file created by save()
         """
         with np.load(filename, allow_pickle=False) as npz:
-            classifier = LinearClassifier(num_classes=npz['num_classes'],
-                                          num_features=npz['num_features'],
-                                          init_weight=npz['weight'])
+            classifier = cls(num_classes=npz['num_classes'],
+                    num_features=npz['num_features'],
+                    init_weight=npz['weight'])
             classifier.offset = npz['offset']
             classifier.divisor = npz['divisor']
             return classifier
@@ -233,12 +233,12 @@ class QuadraticClassifier(LinearClassifier):
 
     def train(self, X, y, **optimization_args):
         X = self._add_quadratic_features(X)
-        super().train(X, y, **optimization_args)
+        return super().train(X, y, **optimization_args)
 
     def predict(self, X):
         X = self._add_quadratic_features(X)
-        super().predict(X)
+        return super().predict(X)
 
     def evaluate(self, X, y):
         X = self._add_quadratic_features(X)
-        super().evaluate(X, y)
+        return super().evaluate(X, y)
