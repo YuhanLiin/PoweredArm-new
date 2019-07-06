@@ -13,6 +13,10 @@ class LinearClassifier:
         self.num_features = num_features
         # n+1 * c matrix
         self.weight = np.zeros((num_features + 1, num_classes), dtype=np.float32)
+        
+        # Used for feature scaling; set by train()
+        self.offset = None
+        self.divisor = None
 
         if init_weight is not None:
             # Dependency injection for testing
@@ -196,3 +200,45 @@ class LinearClassifier:
             define('CLASSIFIER_WEIGHT', convert_arr(self.weight))
             define('CLASSIFIER_OFFSET', convert_arr(self.offset))
             define('CLASSIFIER_DIVISOR', convert_arr(self.divisor))
+
+class QuadraticClassifier(LinearClassifier):
+    def __init__(self, num_classes, num_features, init_weight=None):
+        assert num_classes >= 2
+
+        # number of quadratic features = n choose 2 + n
+        num_features += num_features * (num_features - 1) // 2 + num_features;
+        super().__init__(num_classes, num_features, init_weight)
+
+    def _add_quadratic_features(self, X):
+        """
+        Add quadratic features to m * n features matrix with only linear features
+        """
+        # If we already added the quadratic features, do nothing
+        if np.shape(X)[1] == self.num_features:
+            return X
+
+        num_inputs = np.shape(X)[1]
+        num_quad = self.num_features - num_inputs
+        new_X = np.c_[X, np.zeros((np.shape(X)[0], num_quad))]
+
+        c = num_inputs
+        for i in range(num_inputs):
+            col1 = X[:, i]
+            for j in range(i, num_inputs):
+                col2 = X[:, j]
+                new_X[:, c] = col1 * col2
+                c += 1
+
+        return new_X
+
+    def train(self, X, y, **optimization_args):
+        X = self._add_quadratic_features(X)
+        super().train(X, y, **optimization_args)
+
+    def predict(self, X):
+        X = self._add_quadratic_features(X)
+        super().predict(X)
+
+    def evaluate(self, X, y):
+        X = self._add_quadratic_features(X)
+        super().evaluate(X, y)
